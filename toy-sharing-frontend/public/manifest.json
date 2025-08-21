@@ -1,0 +1,16 @@
+{
+  "name": "Toy Sharing Platform",
+  "short_name": "ToyShare",
+  "description": "Nền tảng chia sẻ đồ chơi cho trẻ em",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#f075b7",
+  "icons": [
+    {
+      "src": "/vite.svg",
+      "sizes": "any",
+      "type": "image/svg+xml"
+    }
+  ]
+}

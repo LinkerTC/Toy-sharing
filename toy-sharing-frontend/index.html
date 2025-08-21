@@ -1,0 +1,174 @@
+<!doctype html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="Nền tảng chia sẻ đồ chơi cho trẻ em - An toàn, thú vị và giáo dục"
+    />
+    <meta
+      name="keywords"
+      content="đồ chơi, chia sẻ, trẻ em, giáo dục, an toàn"
+    />
+    <meta name="author" content="Toy Sharing Platform" />
+
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://toysharing.com/" />
+    <meta
+      property="og:title"
+      content="Toy Sharing - Chia sẻ đồ chơi cho trẻ em"
+    />
+    <meta
+      property="og:description"
+      content="Nền tảng chia sẻ đồ chơi an toàn, thú vị cho trẻ em và phụ huynh"
+    />
+    <meta property="og:image" content="/og-image.jpg" />
+
+    <!-- Twitter -->
+    <meta property="twitter:card" content="summary_large_image" />
+    <meta property="twitter:url" content="https://toysharing.com/" />
+    <meta
+      property="twitter:title"
+      content="Toy Sharing - Chia sẻ đồ chơi cho trẻ em"
+    />
+    <meta
+      property="twitter:description"
+      content="Nền tảng chia sẻ đồ chơi an toàn, thú vị cho trẻ em và phụ huynh"
+    />
+    <meta property="twitter:image" content="/twitter-image.jpg" />
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poppins:wght@400;500;600;700;800&family=Nunito:wght@400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+
+    <!-- Theme Color -->
+    <meta name="theme-color" content="#f075b7" />
+
+    <!-- Manifest for PWA -->
+    <link rel="manifest" href="/manifest.json" />
+
+    <title>Toy Sharing - Chia sẻ đồ chơi vui nhộn! 🧸</title>
+
+    <!-- Inline critical CSS for performance -->
+    <style>
+      /* Loading animation */
+      .loading-screen {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(
+          135deg,
+          #f093fb 0%,
+          #f5576c 50%,
+          #4facfe 100%
+        );
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        z-index: 9999;
+        opacity: 1;
+        transition: opacity 0.5s ease-out;
+      }
+
+      .loading-screen.hidden {
+        opacity: 0;
+        pointer-events: none;
+      }
+
+      .toy-bounce {
+        font-size: 3rem;
+        animation: bounce 1s infinite;
+      }
+
+      @keyframes bounce {
+        0%,
+        20%,
+        53%,
+        80%,
+        100% {
+          transform: translateY(0);
+        }
+        40%,
+        43% {
+          transform: translateY(-20px);
+        }
+        70% {
+          transform: translateY(-10px);
+        }
+        90% {
+          transform: translateY(-4px);
+        }
+      }
+
+      /* Prevent flash of unstyled content */
+      body {
+        margin: 0;
+        font-family: "Inter", "Poppins", system-ui, sans-serif;
+        background-color: #fefbff;
+      }
+
+      #root {
+        min-height: 100vh;
+      }
+    </style>
+  </head>
+  <body>
+    <!-- Loading Screen -->
+    <div id="loading-screen" class="loading-screen">
+      <div class="text-center">
+        <div class="toy-bounce">🧸</div>
+        <div class="text-white text-xl font-display font-semibold mt-4">
+          Đang tải...
+        </div>
+      </div>
+    </div>
+
+    <!-- Main App -->
+    <div id="root"></div>
+
+    <!-- Scripts -->
+    <script type="module" src="/src/main.jsx"></script>
+
+    <!-- Hide loading screen after app loads -->
+    <script>
+      window.addEventListener("load", () => {
+        setTimeout(() => {
+          const loadingScreen = document.getElementById("loading-screen");
+          if (loadingScreen) {
+            loadingScreen.classList.add("hidden");
+            setTimeout(() => {
+              loadingScreen.remove();
+            }, 500);
+          }
+        }, 1000); // Show loading for at least 1 second
+      });
+    </script>
+
+    <!-- Service Worker -->
+    <!-- <script>
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+          navigator.serviceWorker.register('/sw.js')
+            .then((registration) => {
+              console.log('SW registered: ', registration);
+            })
+            .catch((registrationError) => {
+              console.log('SW registration failed: ', registrationError);
+            });
+        });
+      }
+    </script> -->
+  </body>
+</html>
