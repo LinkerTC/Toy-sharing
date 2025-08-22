@@ -12,13 +12,11 @@ const Login = () => {
   const [isSubmitting, setIsSubmitting] = useState(false)
 
   const { login } = useAuth()
-  const { success, error } = useNotifications()
+  // Fix: Dùng đúng method names từ NotificationContext của user
+  const { notifySuccess, notifyError } = useNotifications()
   const navigate = useNavigate()
   const location = useLocation()
-
-  const from = location.state?.from?.pathname || '/'
-  console.log('Redirecting to:', from)
- 
+  
   const validateForm = () => {
     const newErrors = {}
 
@@ -56,39 +54,58 @@ const Login = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault()
+    console.log('🔑 Login attempt with:', { email: formData.email, password: '***hidden***' })
 
-    if (!validateForm()) return
+    if (!validateForm()) {
+      console.log('❌ Validation failed:', errors)
+      return
+    }
 
     setIsSubmitting(true)
 
     try {
+      console.log('🔄 Calling login function...')
       const result = await login(formData.email, formData.password)
-console.log('Login result:', result)
-      if (result) {
-        // success('Đăng nhập thành công! 🎉')
-        // console.log("111111", result)
-        // navigate(from, { replace: true })
-        navigate("/")
+      console.log('📄 Login result:', result)
+
+      // Fix: Check for success more carefully
+      if (result && result.success !== false && !result.error) {
+        // SUCCESS - Go to home page
+        console.log('✅ Login successful, preparing redirect...')
+        notifySuccess('Đăng nhập thành công', 'Chào mừng bạn trở lại!')
+
+        // Force redirect after a short delay to ensure state updates
+        setTimeout(() => {
+          console.log('🏠 Redirecting to home...')
+          navigate('/', { replace: true })
+        }, 100)
+
       } else {
-        error(result.error || 'Đăng nhập thất bại')
+        // FAILED - Stay on login page
+        console.log('❌ Login failed:', result)
+        const errorMsg = result?.error || result?.message || 'Email hoặc mật khẩu không đúng'
+        // notifyError('Đăng nhập thất bại', errorMsg)
+
+        // Clear password field on error
+        setFormData(prev => ({ ...prev, password: '' }))
       }
     } catch (err) {
-      error('Có lỗi xảy ra. Vui lòng thử lại.')
+      console.error('💥 Login error:', err)
+      notifyError('Lỗi đăng nhập', 'Có lỗi xảy ra. Vui lòng thử lại.')
+      setFormData(prev => ({ ...prev, password: '' }))
+    } finally {
+      setIsSubmitting(false)
     }
- finally{
-   setIsSubmitting(false)
- }
   }
-
   return (
-    <div className="min-h-screen flex items-center justify-center hero-bg p-4 relative overflow-hidden">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-pink-50 via-purple-50 to-blue-50 p-4 relative overflow-hidden">
 
       {/* Floating Toys Background */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         {['🧸', '🚗', '🎨', '⚽', '🤖'].map((emoji, index) => (
           <div
             key={index}
-            className="floating-toy"
+            className="absolute text-4xl opacity-20 animate-bounce"
             style={{
               top: `${15 + (index * 20)}%`,
               left: `${5 + (index * 18)}%`,
@@ -106,20 +123,22 @@ console.log('Login result:', result)
           {/* Header */}
           <div className="text-center mb-8">
             <Link to="/" className="inline-flex items-center space-x-3 text-decoration-none mb-6">
-              <span className="text-4xl animate-bounce-slow">🧸</span>
-              <span className="text-2xl font-bold gradient-text">Toy Sharing</span>
+              <span className="text-4xl animate-bounce">🧸</span>
+              <span className="text-2xl font-bold bg-gradient-to-r from-pink-500 to-purple-600 bg-clip-text text-transparent">
+                Toy Sharing
+              </span>
             </Link>
 
             <h1 className="text-3xl font-bold text-gray-900 mb-2">Đăng nhập</h1>
             <p className="text-gray-600">
-              Chào mừng bạn trở lại! Hãy đăng nhập để tiếp tục chia sẻ niềm vui.
+              Chào mừng bạn trở lại! Hãy đăng nhập để tiếp tục chia sẻ niềm vui. 👋
             </p>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-6">
 
             <div>
-              <label className="form-label">
+              <label className="block font-medium mb-2 text-gray-700">
                 Email
                 <span className="text-red-500 ml-1">*</span>
               </label>
@@ -128,12 +147,13 @@ console.log('Login result:', result)
                 name="email"
                 value={formData.email}
                 onChange={handleChange}
-                className={`form-input ${errors.email ? 'border-red-500 focus:border-red-500 focus:ring-red-100' : ''}`}
-                placeholder="Nhập email của bạn"
+                className={`w-full px-4 py-3 border-2 rounded-xl focus:outline-none transition-colors ${
+                  errors.email ? 'border-red-500 focus:border-red-500' : 'border-gray-200 focus:border-pink-500'
+                }`}
                 disabled={isSubmitting}
               />
               {errors.email && (
-                <div className="form-error">
+                <div className="flex items-center space-x-2 text-red-500 text-sm mt-2">
                   <span>⚠️</span>
                   <span>{errors.email}</span>
                 </div>
@@ -141,7 +161,7 @@ console.log('Login result:', result)
             </div>
 
             <div>
-              <label className="form-label">
+              <label className="block font-medium mb-2 text-gray-700">
                 Mật khẩu
                 <span className="text-red-500 ml-1">*</span>
               </label>
@@ -150,12 +170,13 @@ console.log('Login result:', result)
                 name="password"
                 value={formData.password}
                 onChange={handleChange}
-                className={`form-input ${errors.password ? 'border-red-500 focus:border-red-500 focus:ring-red-100' : ''}`}
-                placeholder="Nhập mật khẩu"
+                className={`w-full px-4 py-3 border-2 rounded-xl focus:outline-none transition-colors ${
+                  errors.password ? 'border-red-500 focus:border-red-500' : 'border-gray-200 focus:border-pink-500'
+                }`}
                 disabled={isSubmitting}
               />
               {errors.password && (
-                <div className="form-error">
+                <div className="flex items-center space-x-2 text-red-500 text-sm mt-2">
                   <span>⚠️</span>
                   <span>{errors.password}</span>
                 </div>
@@ -164,29 +185,29 @@ console.log('Login result:', result)
 
             <div className="flex items-center justify-between text-sm">
               <label className="flex items-center space-x-2">
-                <input type="checkbox" className="rounded border-gray-300 text-primary-600 focus:ring-primary-500" />
+                <input type="checkbox" className="rounded border-gray-300" />
                 <span className="text-gray-600">Ghi nhớ đăng nhập</span>
               </label>
-              <Link to="/forgot-password" className="text-primary-500 hover:text-primary-600 font-medium">
+              <Link to="/forgot-password" className="text-pink-500 hover:text-pink-600 font-medium">
                 Quên mật khẩu?
               </Link>
             </div>
 
             <button
               type="submit"
-              className="w-full btn btn-primary btn-lg"
+              className="w-full bg-pink-500 text-white px-6 py-4 rounded-xl font-semibold hover:bg-pink-600 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
               disabled={isSubmitting}
             >
               {isSubmitting ? (
-                <>
-                  <div className="spinner-sm"></div>
+                <div className="flex items-center justify-center space-x-2">
+                  <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
                   <span>Đang đăng nhập...</span>
-                </>
+                </div>
               ) : (
-                <>
+                <div className="flex items-center justify-center space-x-2">
                   <span>🔐</span>
                   <span>Đăng nhập</span>
-                </>
+                </div>
               )}
             </button>
           </form>
@@ -203,11 +224,19 @@ console.log('Login result:', result)
 
           {/* Social Login */}
           <div className="space-y-3">
-            <button className="w-full btn btn-outline">
+            <button 
+              type="button"
+              className="w-full flex items-center justify-center space-x-2 px-6 py-3 border-2 border-gray-200 rounded-xl hover:bg-gray-50 transition-colors"
+              onClick={() => notifyError('Chức năng chưa sẵn sàng', 'Đăng nhập Facebook đang được phát triển')}
+            >
               <span>📘</span>
               <span>Đăng nhập với Facebook</span>
             </button>
-            <button className="w-full btn btn-outline">
+            <button 
+              type="button"
+              className="w-full flex items-center justify-center space-x-2 px-6 py-3 border-2 border-gray-200 rounded-xl hover:bg-gray-50 transition-colors"
+              onClick={() => notifyError('Chức năng chưa sẵn sàng', 'Đăng nhập Google đang được phát triển')}
+            >
               <span>🌐</span>
               <span>Đăng nhập với Google</span>
             </button>
@@ -216,7 +245,7 @@ console.log('Login result:', result)
           {/* Footer */}
           <div className="mt-6 text-center text-sm text-gray-600">
             <span>Chưa có tài khoản?</span>
-            <Link to="/register" className="ml-2 text-primary-500 hover:text-primary-600 font-semibold">
+            <Link to="/register" className="ml-2 text-pink-500 hover:text-pink-600 font-semibold">
               Đăng ký ngay
             </Link>
           </div>

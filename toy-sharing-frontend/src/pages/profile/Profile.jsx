@@ -4,6 +4,24 @@ import { useAuth } from '../../context/AuthContext'
 const Profile = () => {
   const { user } = useAuth()
   const [isEditing, setIsEditing] = useState(false)
+  const [loading, setLoading] = useState(true)
+//   if(user){
+//     setLoading(false)
+//   }
+
+// if (loading) {
+//     return (
+//       <div className="min-h-screen">
+//         <div className="container py-16">
+//           <div className="text-center">
+//             <div className="spinner mx-auto mb-4"></div>
+//             <p className="text-gray-600">Đang tải Profile...</p>
+//           </div>
+//         </div>
+//       </div>
+//     )
+//   }
+
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="container py-8 max-w-4xl">
