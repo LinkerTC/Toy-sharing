@@ -1,0 +1,54 @@
+[{
+  "_id": {
+    "$oid": "68a60f272cbbcd30cbe15ea8"
+  },
+  "owner": {
+    "$oid": "68a60d9a2cbbcd30cbe15ea4"
+  },
+  "name": "Robot lập trình mBot",
+  "description": "Robot giáo dục giúp trẻ học lập trình cơ bản, điều khiển qua app",
+  "category": "electronic",
+  "ageGroup": "9-12",
+  "condition": "like-new",
+  "images": [
+    "https://example.com/robot1.jpg"
+  ],
+  "status": "available",
+  "pickupAddress": "123 Phố Huế, Hà Nội",
+  "ownerNotes": "Còn đầy đủ phụ kiện, sạch sẽ",
+  "isActive": true,
+  "createdAt": {
+    "$date": "2025-08-20T18:08:39.028Z"
+  },
+  "updatedAt": {
+    "$date": "2025-08-20T18:08:39.028Z"
+  },
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "68a619a02cbbcd30cbe15ed2"
+  },
+  "owner": {
+    "$oid": "68a60d9a2cbbcd30cbe15ea4"
+  },
+  "name": "Building Blocks",
+  "description": "Colorful building blocks for kids",
+  "category": "construction",
+  "ageGroup": "13-15",
+  "condition": "new",
+  "images": [
+    "https://example.com/image1.jpg"
+  ],
+  "status": "available",
+  "pickupAddress": "123 Phố Huế, Hà Nội",
+  "ownerNotes": "Available at home",
+  "isActive": true,
+  "createdAt": {
+    "$date": "2025-08-20T18:53:20.646Z"
+  },
+  "updatedAt": {
+    "$date": "2025-08-20T18:53:20.646Z"
+  },
+  "__v": 0
+}]

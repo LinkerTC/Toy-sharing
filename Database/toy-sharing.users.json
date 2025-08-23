@@ -1,0 +1,26 @@
+[{
+  "_id": {
+    "$oid": "68a60d9a2cbbcd30cbe15ea4"
+  },
+  "email": "test@example.com",
+  "password": "$2a$12$z56qvOy/xQ8a.KJwmeX3cOM0ilOuFbdiQv0iqfAkKU1l6ocaAFD.e",
+  "profile": {
+    "firstName": "UpdatedName",
+    "lastName": "UpdatedLast",
+    "phone": "0909999999",
+    "address": "456 New St"
+  },
+  "stats": {
+    "toysShared": 2,
+    "toysBorrowed": 0,
+    "rating": 0
+  },
+  "isActive": true,
+  "createdAt": {
+    "$date": "2025-08-20T18:02:02.914Z"
+  },
+  "updatedAt": {
+    "$date": "2025-08-20T18:53:20.648Z"
+  },
+  "__v": 0
+}]

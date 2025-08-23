@@ -1,0 +1,136 @@
+[{
+  "_id": {
+    "$oid": "68a60aec9ebf2fe408e5d68d"
+  },
+  "name": "educational",
+  "displayName": "Đồ chơi giáo dục",
+  "description": "Đồ chơi phát triển trí tuệ, kỹ năng học tập",
+  "icon": "📚",
+  "isActive": true,
+  "__v": 0,
+  "createdAt": {
+    "$date": "2025-08-20T17:50:36.131Z"
+  },
+  "updatedAt": {
+    "$date": "2025-08-20T17:50:36.131Z"
+  }
+},
+{
+  "_id": {
+    "$oid": "68a60aec9ebf2fe408e5d68e"
+  },
+  "name": "construction",
+  "displayName": "Đồ chơi xây dựng",
+  "description": "Lego, blocks, đồ chơi xây dựng sáng tạo",
+  "icon": "🧱",
+  "isActive": true,
+  "__v": 0,
+  "createdAt": {
+    "$date": "2025-08-20T17:50:36.132Z"
+  },
+  "updatedAt": {
+    "$date": "2025-08-20T17:50:36.132Z"
+  }
+},
+{
+  "_id": {
+    "$oid": "68a60aec9ebf2fe408e5d68f"
+  },
+  "name": "dolls",
+  "displayName": "Búp bê & Thú nhồi bông",
+  "description": "Búp bê, gấu bông, đồ chơi mềm",
+  "icon": "🧸",
+  "isActive": true,
+  "__v": 0,
+  "createdAt": {
+    "$date": "2025-08-20T17:50:36.132Z"
+  },
+  "updatedAt": {
+    "$date": "2025-08-20T17:50:36.132Z"
+  }
+},
+{
+  "_id": {
+    "$oid": "68a60aec9ebf2fe408e5d690"
+  },
+  "name": "vehicles",
+  "displayName": "Phương tiện & Xe đồ chơi",
+  "description": "Ô tô, xe máy, tàu hỏa, máy bay đồ chơi",
+  "icon": "🚗",
+  "isActive": true,
+  "__v": 0,
+  "createdAt": {
+    "$date": "2025-08-20T17:50:36.132Z"
+  },
+  "updatedAt": {
+    "$date": "2025-08-20T17:50:36.132Z"
+  }
+},
+{
+  "_id": {
+    "$oid": "68a60aec9ebf2fe408e5d691"
+  },
+  "name": "sports",
+  "displayName": "Đồ chơi thể thao",
+  "description": "Bóng, vợt, đồ chơi vận động ngoài trời",
+  "icon": "⚽",
+  "isActive": true,
+  "__v": 0,
+  "createdAt": {
+    "$date": "2025-08-20T17:50:36.132Z"
+  },
+  "updatedAt": {
+    "$date": "2025-08-20T17:50:36.132Z"
+  }
+},
+{
+  "_id": {
+    "$oid": "68a60aec9ebf2fe408e5d692"
+  },
+  "name": "arts_crafts",
+  "displayName": "Nghệ thuật & Thủ công",
+  "description": "Bút màu, giấy, đồ dùng vẽ vời, làm thủ công",
+  "icon": "🎨",
+  "isActive": true,
+  "__v": 0,
+  "createdAt": {
+    "$date": "2025-08-20T17:50:36.132Z"
+  },
+  "updatedAt": {
+    "$date": "2025-08-20T17:50:36.132Z"
+  }
+},
+{
+  "_id": {
+    "$oid": "68a60aec9ebf2fe408e5d693"
+  },
+  "name": "electronic",
+  "displayName": "Đồ chơi điện tử",
+  "description": "Robot, đồ chơi có pin, thiết bị điện tử",
+  "icon": "🤖",
+  "isActive": true,
+  "__v": 0,
+  "createdAt": {
+    "$date": "2025-08-20T17:50:36.132Z"
+  },
+  "updatedAt": {
+    "$date": "2025-08-20T17:50:36.132Z"
+  }
+},
+{
+  "_id": {
+    "$oid": "68a60aec9ebf2fe408e5d694"
+  },
+  "name": "other",
+  "displayName": "Khác",
+  "description": "Các loại đồ chơi khác",
+  "icon": "🎮",
+  "isActive": true,
+  "__v": 0,
+  "createdAt": {
+    "$date": "2025-08-20T17:50:36.132Z"
+  },
+  "updatedAt": {
+    "$date": "2025-08-20T17:50:36.132Z"
+  }
+}]

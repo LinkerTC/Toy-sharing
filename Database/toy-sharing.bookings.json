@@ -1,0 +1,29 @@
+[{
+  "_id": {
+    "$oid": "68a610c22cbbcd30cbe15eb7"
+  },
+  "toy": {
+    "$oid": "68a60f272cbbcd30cbe15ea8"
+  },
+  "borrower": {
+    "$oid": "68a60d9a2cbbcd30cbe15ea4"
+  },
+  "lender": {
+    "$oid": "68a60d9a2cbbcd30cbe15ea4"
+  },
+  "startDate": {
+    "$date": "2025-09-01T00:00:00.000Z"
+  },
+  "endDate": {
+    "$date": "2025-09-05T00:00:00.000Z"
+  },
+  "status": "requested",
+  "borrowerMessage": "Xin chào, con tôi rất thích robot. Xin phép mượn để tổ chức sinh nhật.",
+  "createdAt": {
+    "$date": "2025-08-20T18:15:30.063Z"
+  },
+  "updatedAt": {
+    "$date": "2025-08-20T18:15:30.063Z"
+  },
+  "__v": 0
+}]
