@@ -118,7 +118,7 @@ const Home = () => {
         </div>
 
         <div className="relative container-custom py-20 lg:py-32">
-          <div className="grid lg:grid-cols-2 gap-12 items-center">
+          <div className="grid w-[90%] mx-auto lg:grid-cols-2 gap-12 items-center">
 
             {/* Left Content */}
             <motion.div

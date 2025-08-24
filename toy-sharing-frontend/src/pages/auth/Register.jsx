@@ -85,37 +85,47 @@ const Register = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault()
+    setIsSubmitting(true)
 
     if (!validateForm()) return
 
-    setIsSubmitting(true)
-
     try {
-      const result = await register({
-        firstName: formData.firstName.trim(),
-        lastName: formData.lastName.trim(),
-        email: formData.email,
-        password: formData.password,
-        phone: formData.phone,
-        address: formData.address.trim() // Added address to registration data
-      })
+      const response = await fetch('http://localhost:3000/api/auth/register', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          email: formData.email,
+          password: formData.password,
+          profile: {
+            firstName: formData.firstName.trim(),
+            lastName: formData.lastName.trim(),
+            phone: formData.phone,
+            address: formData.address.trim()
+          }
+        })
+      });
+      const result = await response.json();
 
       if (result.success) {
-        success('Đăng ký thành công! Chào mừng bạn đến với Toy Sharing! 🎉')
-        navigate('/')
-      } else {
-        error(result.error || 'Đăng ký thất bại')
+        success(result.message || 'Đăng ký thành công!')
+        
       }
+      error(result.message || result.error || 'Đăng ký thất bại')
     } catch (err) {
       error('Có lỗi xảy ra. Vui lòng thử lại.')
     }
-
-    setIsSubmitting(false)
+    finally {
+      setIsSubmitting(false)
+      setTimeout(() => {
+        navigate('/', { replace: true })
+      }, 500)
+    }
   }
 
   return (
     <div className="min-h-screen flex items-center justify-center hero-bg p-4 py-12 relative overflow-hidden">
-
       {/* Floating Toys Background */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         {['🧸', '🚗', '🎨', '⚽', '🤖', '🎪'].map((emoji, index) => (
