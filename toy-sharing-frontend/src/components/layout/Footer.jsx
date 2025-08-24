@@ -37,7 +37,7 @@ const Footer = () => {
 
   return (
     <footer className={`border-t ${isKidMode() ? 'border-pink-200 bg-gradient-to-r from-pink-50 to-blue-50' : 'border-gray-200 bg-gray-50'}`}>
-      <div className="container-custom">
+      <div className="container-custom mx-auto w-4/5">
 
         {/* Main Footer Content */}
         <div className="py-12">

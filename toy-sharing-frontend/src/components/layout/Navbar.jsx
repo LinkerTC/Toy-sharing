@@ -83,7 +83,7 @@ const Navbar = () => {
         ? 'bg-white/90 border-pink-200' 
         : 'bg-white/95 border-gray-200'
     )}>
-      <div className="container-custom">
+      <div className="container-custom mx-auto w-4/5">
         <div className="flex items-center justify-between h-16 lg:h-20">
 
           {/* Logo */}

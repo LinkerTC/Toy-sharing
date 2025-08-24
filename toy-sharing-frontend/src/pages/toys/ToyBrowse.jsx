@@ -53,11 +53,12 @@ const Toys = () => {
   }
 
   useEffect(() => {
-    // Simulate API call
     const loadToys = async () => {
       setLoading(true)
-      await new Promise(resolve => setTimeout(resolve, 1000))
-      setToys(mockToys)
+      const response = await fetch('http://localhost:3000/api/toys')
+      const result = await response.json()
+      console.log(result)
+      setToys(result.data.toys)   // 👈 Lấy mảng toys bên trong
       setLoading(false)
     }
     loadToys()
@@ -163,12 +164,14 @@ const Toys = () => {
                   <div className="flex items-center justify-between mb-4">
                     <div className="flex items-center space-x-2">
                       <div className="w-8 h-8 bg-gradient-to-r from-primary-500 to-secondary-500 rounded-full flex items-center justify-center text-white text-xs font-semibold">
-                        {toy.owner.name.charAt(0)}
+                        {toy.owner?.profile?.firstName?.charAt(0) || '👤'}
                       </div>
-                      <div>
-                        <div className="text-sm font-medium text-gray-900">{toy.owner.name}</div>
-                        <div className="text-xs text-gray-500">⭐ {toy.owner.rating}</div>
-                      </div>
+                      <div className="text-sm font-medium text-gray-900">
+  {toy.owner?.profile?.firstName} {toy.owner?.profile?.lastName}
+</div>
+<div className="text-xs text-gray-500">
+  ⭐ {toy.owner?.stats?.rating ?? 0}
+</div>
                     </div>
                   </div>
 
