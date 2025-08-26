@@ -180,11 +180,12 @@ const validateQueryParams = [
     .isInt({ min: 1, max: 50 })
     .withMessage("Giới hạn phải từ 1-50"),
 
-  // CHANGED: category là ObjectId
   query("category")
     .optional()
-    .isMongoId()
-    .withMessage("Category phải là ObjectId hợp lệ"),
+    .isString()
+    .trim()
+    .notEmpty()
+    .withMessage("Category phải là chuỗi (name hoặc ObjectId)"),
 
   query("ageGroup")
     .optional()
