@@ -2,6 +2,8 @@ import { useState } from 'react'
 import { Link, useNavigate, useLocation } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
 import { useNotifications } from '../../context/NotificationContext'
+import { GoogleLogin } from '@react-oauth/google'
+import axios from 'axios'
 
 const Login = () => {
   const [formData, setFormData] = useState({
@@ -10,6 +12,7 @@ const Login = () => {
   })
   const [errors, setErrors] = useState({})
   const [isSubmitting, setIsSubmitting] = useState(false)
+    const [googleLoading, setGoogleLoading] = useState(false)
 
   const { login } = useAuth()
   // Fix: Dùng đúng method names từ NotificationContext của user
@@ -78,6 +81,7 @@ const Login = () => {
         setTimeout(() => {
           console.log('🏠 Redirecting to home...')
           navigate('/', { replace: true })
+          window.location.reload();
         }, 100)
 
       } else {
@@ -97,6 +101,32 @@ const Login = () => {
       setIsSubmitting(false)
     }
   }
+
+
+  // Google Login callback handler
+  const handleGoogleSuccess = async (credentialResponse) => {
+    if (!credentialResponse.credential) return;
+    setGoogleLoading(true);
+    try {
+      const res = await axios.post('http://localhost:3000/api/auth/google', {
+        token: credentialResponse.credential
+      });
+      localStorage.setItem('token', res.data.token);
+      // If success, redirect to home
+      navigate("/");
+    } catch (err) {
+      // You might want to show error here
+      // Optionally: setErrors({ google: "Đăng nhập Google thất bại" });
+    } finally {
+      setGoogleLoading(false);
+    }
+  };
+
+  const handleGoogleFailure = () => {
+    // Optionally handle failure
+    // setErrors({ google: "Đăng nhập Google thất bại" });
+  };
+
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-pink-50 via-purple-50 to-blue-50 p-4 relative overflow-hidden">
 
@@ -221,26 +251,31 @@ const Login = () => {
               <span className="px-4 bg-white text-gray-500">hoặc</span>
             </div>
           </div>
-
-          {/* Social Login */}
+          {/* Social Register */}
           <div className="space-y-3">
-            <button 
-              type="button"
-              className="w-full flex items-center justify-center space-x-2 px-6 py-3 border-2 border-gray-200 rounded-xl hover:bg-gray-50 transition-colors"
-              onClick={() => notifyError('Chức năng chưa sẵn sàng', 'Đăng nhập Facebook đang được phát triển')}
-            >
-              <span>📘</span>
-              <span>Đăng nhập với Facebook</span>
-            </button>
-            <button 
-              type="button"
-              className="w-full flex items-center justify-center space-x-2 px-6 py-3 border-2 border-gray-200 rounded-xl hover:bg-gray-50 transition-colors"
-              onClick={() => notifyError('Chức năng chưa sẵn sàng', 'Đăng nhập Google đang được phát triển')}
-            >
-              <span>🌐</span>
-              <span>Đăng nhập với Google</span>
-            </button>
+            <div className="w-full flex justify-center">
+              <GoogleLogin
+                onSuccess={handleGoogleSuccess}
+                onError={handleGoogleFailure}
+                text="signin_with"
+                width="100%"
+                useOneTap={false}
+                shape="rectangular"
+                theme="outline"
+                size="large"
+                logo_alignment="left"
+                disabled={googleLoading}
+              />
+            </div>
+            {/* Optionally show loading indicator */}
+            {googleLoading && (
+              <div className="flex justify-center mt-2">
+                <div className="spinner-sm"></div>
+                <span className="ml-2 text-gray-500">Đang đăng nhập với Google...</span>
+              </div>
+            )}
           </div>
+
 
           {/* Footer */}
           <div className="mt-6 text-center text-sm text-gray-600">

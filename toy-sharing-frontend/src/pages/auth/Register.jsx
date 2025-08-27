@@ -1,3 +1,5 @@
+import { GoogleLogin } from '@react-oauth/google'
+import axios from 'axios'
 import { useState, useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
@@ -16,6 +18,7 @@ const Register = () => {
   })
   const [errors, setErrors] = useState({})
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [googleLoading, setGoogleLoading] = useState(false)
   const [provinces, setProvinces] = useState([]);
   const [selectedProvince, setSelectedProvince] = useState(null);
   const [selectedWard, setSelectedWard] = useState(null);
@@ -160,6 +163,30 @@ const Register = () => {
     }
   }
 
+  // Google Login callback handler
+  const handleGoogleSuccess = async (credentialResponse) => {
+    if (!credentialResponse.credential) return;
+    setGoogleLoading(true);
+    try {
+      const res = await axios.post('http://localhost:3000/api/auth/google', {
+        token: credentialResponse.credential
+      });
+      localStorage.setItem('token', res.data.token);
+      // If success, redirect to home
+      navigate("/");
+      window.location.reload();
+    } catch (err) {
+      // You might want to show error here
+      // Optionally: setErrors({ google: "Đăng nhập Google thất bại" });
+    } finally {
+      setGoogleLoading(false);
+    }
+  };
+
+  const handleGoogleFailure = () => {
+    // Optionally handle failure
+    // setErrors({ google: "Đăng nhập Google thất bại" });
+  };
   return (
     <div className="min-h-screen flex items-center justify-center hero-bg p-4 py-12 relative overflow-hidden">
       {/* Floating Toys Background */}
@@ -445,14 +472,27 @@ const Register = () => {
 
           {/* Social Register */}
           <div className="space-y-3">
-            <button className="w-full btn btn-outline">
-              <span>📘</span>
-              <span>Đăng ký với Facebook</span>
-            </button>
-            <button className="w-full btn btn-outline">
-              <span>🌐</span>
-              <span>Đăng ký với Google</span>
-            </button>
+            <div className="w-full flex justify-center">
+              <GoogleLogin
+                onSuccess={handleGoogleSuccess}
+                onError={handleGoogleFailure}
+                text="signup_with"
+                width="100%"
+                useOneTap={false}
+                shape="rectangular"
+                theme="outline"
+                size="large"
+                logo_alignment="left"
+                disabled={googleLoading}
+              />
+            </div>
+            {/* Optionally show loading indicator */}
+            {googleLoading && (
+              <div className="flex justify-center mt-2">
+                <div className="spinner-sm"></div>
+                <span className="ml-2 text-gray-500">Đang đăng ký với Google...</span>
+              </div>
+            )}
           </div>
 
           {/* Footer */}

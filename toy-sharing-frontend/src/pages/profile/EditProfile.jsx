@@ -15,6 +15,12 @@ const EditProfile = () => {
     address: '',
   })
   const [errors, setErrors] = useState({})
+  const [provinces, setProvinces] = useState([]);
+  const [selectedProvince, setSelectedProvince] = useState(null);
+  const [selectedWard, setSelectedWard] = useState(null);
+  const [street, setStreet] = useState("");
+
+  const fullAddress = `${street}, ${selectedWard?.name || ""}, ${selectedProvince?.name || ""}`;
 
   // Debug logs
   console.log('EditProfile rendering...')
@@ -34,6 +40,41 @@ const EditProfile = () => {
     }
   }, [user])
 
+  useEffect(() => {
+    if (formData.address && provinces.length > 0) {
+      const parts = formData.address.split(',').map(part => part.trim());
+      const len = parts.length;
+      if (len >= 3) {
+        const provinceName = parts[len - 1];
+        const wardName = parts[len - 2];
+        const streetName = parts.slice(0, len - 2).join(', ');
+
+        const province = provinces.find(p => p.name === provinceName);
+        if (province) {
+          setSelectedProvince(province);
+          const ward = province.wards.find(w => w.name === wardName);
+          if (ward) {
+            setSelectedWard(ward);
+          } else {
+            setSelectedWard(null);
+          }
+        } else {
+          setSelectedProvince(null);
+          setSelectedWard(null);
+        }
+        setStreet(streetName);
+      } else {
+        setSelectedProvince(null);
+        setSelectedWard(null);
+        setStreet(formData.address);
+      }
+    } else {
+      setSelectedProvince(null);
+      setSelectedWard(null);
+      setStreet("");
+    }
+  }, [formData.address, provinces]);
+
   const handleChange = (e) => {
     const { name, value } = e.target
     setFormData(prev => ({ ...prev, [name]: value }))
@@ -51,6 +92,27 @@ const EditProfile = () => {
     setErrors(newErrors)
     return Object.keys(newErrors).length === 0
   }
+  useEffect(() => {
+    const fetchProvinces = async () => {
+      const res = await fetch("https://provinces.open-api.vn/api/v2/?depth=2");
+      const data = await res.json();
+      setProvinces(data);
+    };
+    fetchProvinces();
+  }, []);
+
+  const handleProvinceChange = (e) => {
+    const code = Number(e.target.value);
+    const province = provinces.find(p => p.code === code);
+    setSelectedProvince(province);
+    setSelectedWard(null);
+  };
+
+  const handleWardChange = (e) => {
+    const code = Number(e.target.value);
+    const ward = selectedProvince.wards.find(w => w.code === code);
+    setSelectedWard(ward);
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault()
@@ -72,7 +134,7 @@ const EditProfile = () => {
             firstName: formData.firstName,
             lastName: formData.lastName,
             phone: formData.phone,
-            address: formData.address,
+            address: fullAddress.trim(),
           }
         })
       }
@@ -82,7 +144,7 @@ const EditProfile = () => {
             firstName: formData.firstName,
             lastName: formData.lastName,
             phone: formData.phone,
-            address: formData.address,
+            address: fullAddress.trim(),
           }
         },
         { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } }
@@ -118,7 +180,7 @@ const EditProfile = () => {
           <div className="text-6xl mb-4">⚠️</div>
           <h2 className="text-2xl font-bold text-gray-900 mb-4">Không tìm thấy thông tin người dùng</h2>
           <p className="text-gray-600 mb-6">Vui lòng đăng nhập lại để tiếp tục.</p>
-          <button 
+          <button
             onClick={() => navigate('/login')}
             className="bg-pink-500 text-white px-6 py-3 rounded-xl font-semibold hover:bg-pink-600 transition-colors"
           >
@@ -150,16 +212,16 @@ const EditProfile = () => {
             {/* Avatar Upload */}
             <div className="text-center mb-8">
               <div className="w-24 h-24 bg-gradient-to-r from-pink-500 to-purple-500 rounded-full flex items-center justify-center text-white font-bold text-2xl mx-auto mb-4">
-                {user?.profile?.firstName?.charAt(0)?.toUpperCase() || 
-                 user?.email?.charAt(0)?.toUpperCase() || 'U'}
+                {user?.profile?.firstName?.charAt(0)?.toUpperCase() ||
+                  user?.email?.charAt(0)?.toUpperCase() || 'U'}
               </div>
-              <button
+              {/* <button
                 type="button"
                 className="text-pink-500 hover:text-pink-600 font-medium text-sm"
                 onClick={() => alert('Chức năng upload ảnh đang phát triển')}
               >
                 📷 Thay đổi ảnh đại diện
-              </button>
+              </button> */}
             </div>
 
             {/* Basic Info */}
@@ -174,9 +236,8 @@ const EditProfile = () => {
                   name="firstName"
                   value={formData.firstName}
                   onChange={handleChange}
-                  className={`w-full px-4 py-3 border-2 rounded-xl focus:outline-none transition-colors ${
-                    errors.firstName ? 'border-red-500' : 'border-gray-200 focus:border-pink-500'
-                  }`}
+                  className={`w-full px-4 py-3 border-2 rounded-xl focus:outline-none transition-colors ${errors.firstName ? 'border-red-500' : 'border-gray-200 focus:border-pink-500'
+                    }`}
                   disabled={isSubmitting}
                   placeholder="Nhập tên của bạn"
                 />
@@ -192,9 +253,8 @@ const EditProfile = () => {
                   name="lastName"
                   value={formData.lastName}
                   onChange={handleChange}
-                  className={`w-full px-4 py-3 border-2 rounded-xl focus:outline-none transition-colors ${
-                    errors.lastName ? 'border-red-500' : 'border-gray-200 focus:border-pink-500'
-                  }`}
+                  className={`w-full px-4 py-3 border-2 rounded-xl focus:outline-none transition-colors ${errors.lastName ? 'border-red-500' : 'border-gray-200 focus:border-pink-500'
+                    }`}
                   disabled={isSubmitting}
                   placeholder="Nhập họ của bạn"
                 />
@@ -237,13 +297,50 @@ const EditProfile = () => {
               <label className="block font-medium mb-2 text-gray-700">
                 📍 Địa chỉ
               </label>
-              <input
+              {/* <input
                 type="text"
                 name="address"
                 value={formData.address}
                 onChange={handleChange}
                 className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-pink-500 transition-colors"
                 placeholder="VD: Quận 1, TP.HCM"
+                disabled={isSubmitting}
+              /> */}
+              {/* Province Select */}
+              <select
+                value={selectedProvince?.code || ""}
+                onChange={handleProvinceChange}
+                className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl mb-3 focus:outline-none focus:border-pink-500 transition-colors"
+                disabled={isSubmitting}
+              >
+                <option value="">Chọn Tỉnh/Thành phố</option>
+                {provinces.map((p) => (
+                  <option key={p.code} value={p.code}>{p.name}</option>
+                ))}
+              </select>
+
+              {/* Ward Select */}
+              {selectedProvince && (
+                <select
+                  value={selectedWard?.code || ""}
+                  onChange={handleWardChange}
+                  className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl mb-3 focus:outline-none focus:border-pink-500 transition-colors"
+                  disabled={isSubmitting}
+                >
+                  <option value="">Chọn Xã/Phường</option>
+                  {selectedProvince.wards.map((w) => (
+                    <option key={w.code} value={w.code}>{w.name}</option>
+                  ))}
+                </select>
+              )}
+
+              {/* Street Input */}
+              <input
+                type="text"
+                value={street}
+                onChange={(e) => setStreet(e.target.value)}
+                className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-pink-500 transition-colors"
+                placeholder="Số nhà, đường"
                 disabled={isSubmitting}
               />
             </div>
@@ -326,19 +423,19 @@ const EditProfile = () => {
         {/* Quick Actions */}
         <div className="mt-6 text-center">
           <div className="flex justify-center space-x-4 text-sm text-gray-500">
-            <button 
+            <button
               onClick={() => navigate('/profile')}
               className="hover:text-pink-500 transition-colors"
             >
               👤 Xem hồ sơ
             </button>
-            <button 
+            <button
               onClick={() => navigate('/settings')}
               className="hover:text-pink-500 transition-colors"
             >
               ⚙️ Cài đặt
             </button>
-            <button 
+            <button
               onClick={() => navigate('/my-toys')}
               className="hover:text-pink-500 transition-colors"
             >

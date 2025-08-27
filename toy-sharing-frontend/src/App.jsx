@@ -17,6 +17,7 @@ const HowItWorks = lazy(() => import('./pages/HowItWorks'))
 const Login = lazy(() => import('./pages/auth/Login'))
 const Register = lazy(() => import('./pages/auth/Register'))
 const VerifyPage = lazy(() => import('./pages/auth/VerifyPage'))
+const ForgotPassword = lazy(() => import('./pages/auth/ForgotPassword'))
 
 // Toy pages
 const ToyBrowse = lazy(() => import('./pages/toys/ToyBrowse'))
@@ -68,6 +69,7 @@ function App() {
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
           <Route path="/verify" element={<VerifyPage />} />
+          <Route path="/forgot-password" element={<ForgotPassword />} />
 
           {/* Protected Routes */}
           <Route path="/" element={<Layout />}>

@@ -87,6 +87,7 @@ export const AuthProvider = ({ children }) => {
     }
   }
 
+
   const login = async (email, password) => {
     try {
       dispatch({ type: 'AUTH_START' })
@@ -174,7 +175,7 @@ export const AuthProvider = ({ children }) => {
     logout,
     updateUser,
     clearError,
-    checkAuth
+    checkAuth,
   }
 
   return (

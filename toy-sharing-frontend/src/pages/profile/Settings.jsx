@@ -1,15 +1,34 @@
 import { useState } from 'react'
 import { useAuth } from '../../context/AuthContext'
+import axios from 'axios'
 
 const Settings = () => {
   const { user, logout } = useAuth()
   const [showDeleteModal, setShowDeleteModal] = useState(false)
+  const [showChangePasswordModal, setShowChangePasswordModal] = useState(false)
+  const [formData, setFormData] = useState({
+    password: '',
+  })
 
   const handleDeleteAccount = () => {
     if (confirm('Bạn có chắc chắn muốn xóa tài khoản? Hành động này không thể hoàn tác.')) {
       // Handle account deletion
       alert('Tài khoản đã được xóa!')
       logout()
+    }
+  }
+
+  const handleChangePassword = async () => {
+    try {
+      const response = await axios.put('http://localhost:3000/api/auth/change-password',
+        {
+          password: formData.password
+        },
+        { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } }
+      )
+      console.log(response.data)
+    } catch (error) {
+      console.error('Change password error:', error)
     }
   }
 
@@ -49,7 +68,8 @@ const Settings = () => {
                   <h4 className="font-semibold text-gray-900">Đổi mật khẩu</h4>
                   <p className="text-sm text-gray-600">Cập nhật mật khẩu để bảo mật tài khoản</p>
                 </div>
-                <button className="bg-gray-100 text-gray-700 px-4 py-2 rounded-lg font-medium hover:bg-gray-200 transition-colors">
+                <button className="bg-gray-100 text-gray-700 px-4 py-2 rounded-lg font-medium hover:bg-gray-200 transition-colors"
+                  onClick={() => setShowChangePasswordModal(true)}>
                   Đổi mật khẩu
                 </button>
               </div>
@@ -126,6 +146,37 @@ const Settings = () => {
             </div>
           </div>
         </div>
+
+        {/* Change Password Modal */}
+        {showChangePasswordModal && (
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
+            <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6">
+              <div className="text-center mb-6">
+                <div className="text-6xl mb-4">🔒</div>
+                <h3 className="text-xl font-bold text-gray-900 mb-2">Đổi mật khẩu</h3>
+                <p className="text-gray-600">
+                  Mật khẩu mới
+                </p>
+                <input type="password" className="w-full p-2 border border-gray-200 rounded-xl mb-4" placeholder="Mật khẩu mới" value={formData.password} onChange={(e) => setFormData({ ...formData, password: e.target.value })} />
+              </div>
+
+              <div className="flex gap-3">
+                <button 
+                  onClick={() => setShowChangePasswordModal(false)}
+                  className="flex-1 bg-gray-100 text-gray-700 px-4 py-3 rounded-xl font-semibold hover:bg-gray-200 transition-colors"
+                >
+                  Hủy
+                </button>
+                <button 
+                  onClick={handleChangePassword}
+                  className="flex-1 bg-pink-500 text-white px-4 py-3 rounded-xl font-semibold hover:bg-pink-600 transition-colors"
+                >
+                  Đổi mật khẩu
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Delete Modal */}
         {showDeleteModal && (

@@ -1,5 +1,5 @@
 const express = require("express");
-const { register, login, getMe, verifyUser, resendVerificationEmail } = require("../controllers/authController");
+const { register, login, getMe, verifyUser, resendVerificationEmail, changePassword, forgotPassword, verifyForgotPassword, googleLogin } = require("../controllers/authController");
 const {
   validateRegistration,
   validateLogin,
@@ -7,6 +7,11 @@ const {
 const { auth } = require("../middleware/auth");
 
 const router = express.Router();
+
+// @route   POST /api/auth/google
+// @desc    Google login
+// @access  Public
+router.post("/google", googleLogin);
 
 // @route   POST /api/auth/register
 // @desc    Đăng ký user mới
@@ -32,5 +37,22 @@ router.get("/me", auth, getMe);
 // @desc    Resend verification email
 // @access  Public
 router.post("/resend-verification", resendVerificationEmail);
+
+// @route   PUT /api/auth/change-password
+// @desc    Đổi mật khẩu
+// @access  Private
+router.put("/change-password", auth, changePassword);
+
+// @route   POST /api/auth/forgot-password
+// @desc    Forgot password
+// @access  Public
+router.post("/forgot-password", forgotPassword);
+
+// @route   POST /api/auth/verify-forgot-password
+// @desc    Verify forgot password
+// @access  Public
+router.post("/verify-forgot-password", verifyForgotPassword);
+
+
 
 module.exports = router;
