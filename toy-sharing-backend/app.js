@@ -10,6 +10,7 @@ const userRoutes = require("./routes/users");
 const toyRoutes = require("./routes/toys");
 const bookingRoutes = require("./routes/bookings");
 const categoryRoutes = require("./routes/categories");
+const commentRoutes = require("./routes/comments");
 
 const app = express();
 
@@ -82,6 +83,7 @@ app.use("/api/users", userRoutes);
 app.use("/api/toys", toyRoutes);
 app.use("/api/bookings", bookingRoutes);
 app.use("/api/categories", categoryRoutes);
+app.use("/api/comments", commentRoutes);
 
 // 404 handler for API routes
 app.use("/api/*", (req, res) => {

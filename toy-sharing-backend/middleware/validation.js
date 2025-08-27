@@ -183,8 +183,10 @@ const validateQueryParams = [
   // CHANGED: category là ObjectId
   query("category")
     .optional()
-    .isMongoId()
-    .withMessage("Category phải là ObjectId hợp lệ"),
+    .isString()
+    .trim()
+    .notEmpty()
+    .withMessage("Category phải là chuỗi (name hoặc ObjectId)"),
 
   query("ageGroup")
     .optional()
