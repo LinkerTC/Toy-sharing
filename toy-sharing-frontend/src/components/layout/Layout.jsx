@@ -1,14 +1,14 @@
-import { Outlet } from 'react-router-dom'
-import { Suspense } from 'react'
-import { motion } from 'framer-motion'
+import { Outlet } from "react-router-dom";
+import { Suspense } from "react";
+import { motion } from "framer-motion";
 
-import Navbar from './Navbar'
-import Footer from './Footer'
-import { Loading } from '@/components/ui/Spinner'
-import { useTheme } from '@/context/ThemeContext'
+import Navbar from "./Navbar";
+import Footer from "./Footer";
+import { Loading } from "@/components/ui/Spinner";
+import { useTheme } from "@/context/ThemeContext";
 
 const Layout = () => {
-  const { getThemeClasses } = useTheme()
+  const { getThemeClasses } = useTheme();
 
   return (
     <div className={`min-h-screen flex flex-col ${getThemeClasses()}`}>
@@ -29,7 +29,7 @@ const Layout = () => {
 
       <Footer />
     </div>
-  )
-}
+  );
+};
 
-export default Layout
+export default Layout;

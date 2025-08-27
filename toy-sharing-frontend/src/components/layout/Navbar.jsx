@@ -1,93 +1,100 @@
-import { useState, useRef, useEffect } from 'react'
-import { Link, useLocation, useNavigate } from 'react-router-dom'
-import { motion, AnimatePresence } from 'framer-motion'
-import { 
-  Search, 
-  Menu, 
-  X, 
-  User, 
-  Heart, 
+import { useState, useRef, useEffect } from "react";
+import { Link, useLocation, useNavigate } from "react-router-dom";
+import { motion, AnimatePresence } from "framer-motion";
+import {
+  Search,
+  Menu,
+  X,
+  User,
+  Heart,
   ShoppingBag,
   Calendar,
   Settings,
   LogOut,
   Bell,
-  Plus
-} from 'lucide-react'
+  Plus,
+  MessageCircle,
+} from "lucide-react";
 
-import Button from '@/components/ui/Button'
-import { useAuth } from '@/context/AuthContext'
-import { useTheme } from '@/context/ThemeContext'
-import { useNotifications } from '@/context/NotificationContext'
-import { ROUTES } from '@/utils/constants'
-import clsx from 'clsx';
+import Button from "@/components/ui/Button";
+import { useAuth } from "@/context/AuthContext";
+import { useTheme } from "@/context/ThemeContext";
+import { useNotifications } from "@/context/NotificationContext";
+import { ROUTES } from "@/utils/constants";
+import clsx from "clsx";
 
 const Navbar = () => {
-  const [isMenuOpen, setIsMenuOpen] = useState(false)
-  const [isProfileOpen, setIsProfileOpen] = useState(false)
-  const [isNotificationsOpen, setIsNotificationsOpen] = useState(false)
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isProfileOpen, setIsProfileOpen] = useState(false);
+  const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
 
-  const location = useLocation()
-  const navigate = useNavigate()
+  const location = useLocation();
+  const navigate = useNavigate();
 
-  const { user, isAuthenticated, logout } = useAuth()
-  const { currentTheme, isKidMode } = useTheme()
-  const { notifications, unreadCount, markAsRead, markAllAsRead } = useNotifications()
+  const { user, isAuthenticated, logout } = useAuth();
+  const { currentTheme, isKidMode } = useTheme();
+  const { notifications, unreadCount, markAsRead, markAllAsRead } =
+    useNotifications();
 
-  const profileRef = useRef(null)
-  const notificationsRef = useRef(null)
+  const profileRef = useRef(null);
+  const notificationsRef = useRef(null);
 
   // Close dropdowns when clicking outside
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (profileRef.current && !profileRef.current.contains(event.target)) {
-        setIsProfileOpen(false)
+        setIsProfileOpen(false);
       }
-      if (notificationsRef.current && !notificationsRef.current.contains(event.target)) {
-        setIsNotificationsOpen(false)
+      if (
+        notificationsRef.current &&
+        !notificationsRef.current.contains(event.target)
+      ) {
+        setIsNotificationsOpen(false);
       }
-    }
+    };
 
-    document.addEventListener('mousedown', handleClickOutside)
-    return () => document.removeEventListener('mousedown', handleClickOutside)
-  }, [])
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   const handleLogout = () => {
-    logout()
-    setIsProfileOpen(false)
-    navigate(ROUTES.HOME)
-  }
+    logout();
+    setIsProfileOpen(false);
+    navigate(ROUTES.HOME);
+  };
 
   const isActivePath = (path) => {
-    return location.pathname === path
-  }
+    return location.pathname === path;
+  };
 
   const navLinks = [
-    { path: ROUTES.HOME, label: 'Trang chủ', icon: '🏠' },
-    { path: ROUTES.TOYS, label: 'Đồ chơi', icon: '🧸' },
-    { path: ROUTES.HOW_IT_WORKS, label: 'Hướng dẫn', icon: '❓' },
-    { path: ROUTES.ABOUT, label: 'Giới thiệu', icon: 'ℹ️' }
-  ]
+    { path: ROUTES.HOME, label: "Trang chủ", icon: "🏠" },
+    { path: ROUTES.TOYS, label: "Đồ chơi", icon: "🧸" },
+    { path: ROUTES.HOW_IT_WORKS, label: "Hướng dẫn", icon: "❓" },
+    { path: ROUTES.ABOUT, label: "Giới thiệu", icon: "ℹ️" },
+  ];
 
   const userMenuItems = [
-    { path: ROUTES.PROFILE, label: 'Profile', icon: User },
-    { path: ROUTES.MY_TOYS, label: 'Đồ chơi của tôi', icon: Heart },
-    { path: ROUTES.BOOKINGS, label: 'Booking', icon: Calendar },
-    { path: ROUTES.SETTINGS, label: 'Cài đặt', icon: Settings }
-  ]
+    { path: ROUTES.PROFILE, label: "Hồ sơ", icon: User },
+    { path: ROUTES.MY_TOYS, label: "Đồ chơi của tôi", icon: ShoppingBag },
+    { path: ROUTES.BOOKINGS, label: "Đặt hàng", icon: Calendar },
+    { path: ROUTES.FAVORITES, label: "Yêu thích", icon: Heart },
+    { path: ROUTES.SETTINGS, label: "Cài đặt", icon: Settings },
+  ];
 
   return (
-    <nav className={clsx(
-      'sticky top-0 z-40 w-full backdrop-blur-sm border-b transition-all duration-300',
-      isKidMode() 
-        ? 'bg-white/90 border-pink-200' 
-        : 'bg-white/95 border-gray-200'
-    )}>
+    <nav
+      className={clsx(
+        "sticky top-0 z-40 w-full backdrop-blur-sm border-b transition-all duration-300",
+        isKidMode()
+          ? "bg-white/90 border-pink-200"
+          : "bg-white/95 border-gray-200"
+      )}
+    >
       <div className="container-custom mx-auto w-4/5">
         <div className="flex items-center justify-between h-16 lg:h-20">
-
           {/* Logo */}
-          <Link 
+          <Link
             to={ROUTES.HOME}
             className="flex items-center space-x-2 hover:opacity-80 transition-opacity"
           >
@@ -99,12 +106,14 @@ const Navbar = () => {
               🧸
             </motion.div>
             <div className="hidden sm:block">
-              <h1 className={clsx(
-                'text-xl lg:text-2xl font-bold',
-                isKidMode() 
-                  ? 'text-gradient bg-gradient-to-r from-primary-500 to-secondary-500' 
-                  : 'text-gray-900'
-              )}>
+              <h1
+                className={clsx(
+                  "text-xl lg:text-2xl font-bold",
+                  isKidMode()
+                    ? "text-gradient bg-gradient-to-r from-primary-500 to-secondary-500"
+                    : "text-gray-900"
+                )}
+              >
                 Toy Sharing
               </h1>
               <p className="text-xs text-gray-500 hidden lg:block">
@@ -120,12 +129,12 @@ const Navbar = () => {
                 key={link.path}
                 to={link.path}
                 className={clsx(
-                  'flex items-center space-x-2 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200',
+                  "flex items-center space-x-2 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200",
                   isActivePath(link.path)
                     ? isKidMode()
-                      ? 'bg-primary-100 text-primary-700'
-                      : 'bg-gray-100 text-gray-900'
-                    : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+                      ? "bg-primary-100 text-primary-700"
+                      : "bg-gray-100 text-gray-900"
+                    : "text-gray-600 hover:text-gray-900 hover:bg-gray-50"
                 )}
               >
                 <span>{link.icon}</span>
@@ -136,7 +145,6 @@ const Navbar = () => {
 
           {/* Right Section */}
           <div className="flex items-center space-x-2 lg:space-x-4">
-
             {/* Search Button (Mobile) */}
             <button className="p-2 text-gray-600 hover:text-gray-900 lg:hidden">
               <Search className="w-5 h-5" />
@@ -154,6 +162,20 @@ const Navbar = () => {
                   Thêm đồ chơi
                 </Button>
 
+                {/* Chat Button */}
+                <Button
+                  size="small"
+                  variant={isActivePath(ROUTES.CHAT) ? "primary" : "ghost"}
+                  onClick={() => navigate(ROUTES.CHAT)}
+                  leftIcon={<MessageCircle className="w-4 h-4" />}
+                  className={`hidden sm:inline-flex ${
+                    isActivePath(ROUTES.CHAT) ? "bg-blue-100 text-blue-700" : ""
+                  }`}
+                  title="Trò chuyện"
+                >
+                  Chat
+                </Button>
+
                 {/* Notifications */}
                 <div className="relative" ref={notificationsRef}>
                   <button
@@ -163,7 +185,7 @@ const Navbar = () => {
                     <Bell className="w-5 h-5" />
                     {unreadCount > 0 && (
                       <span className="absolute -top-1 -right-1 w-5 h-5 bg-danger-500 text-white text-xs rounded-full flex items-center justify-center">
-                        {unreadCount > 9 ? '9+' : unreadCount}
+                        {unreadCount > 9 ? "9+" : unreadCount}
                       </span>
                     )}
                   </button>
@@ -178,7 +200,9 @@ const Navbar = () => {
                         className="absolute right-0 mt-2 w-80 bg-white border border-gray-200 rounded-2xl shadow-lg py-2 max-h-96 overflow-y-auto"
                       >
                         <div className="px-4 py-2 border-b border-gray-100 flex items-center justify-between">
-                          <h3 className="font-semibold text-gray-900">Thông báo</h3>
+                          <h3 className="font-semibold text-gray-900">
+                            Thông báo
+                          </h3>
                           {unreadCount > 0 && (
                             <button
                               onClick={markAllAsRead}
@@ -200,15 +224,19 @@ const Navbar = () => {
                               key={notification.id}
                               onClick={() => markAsRead(notification.id)}
                               className={clsx(
-                                'w-full px-4 py-3 text-left hover:bg-gray-50 transition-colors',
-                                !notification.read && 'bg-primary-50'
+                                "w-full px-4 py-3 text-left hover:bg-gray-50 transition-colors",
+                                !notification.read && "bg-primary-50"
                               )}
                             >
                               <div className="flex items-start space-x-3">
-                                <div className={clsx(
-                                  'w-2 h-2 rounded-full mt-2',
-                                  notification.read ? 'bg-gray-300' : 'bg-primary-500'
-                                )} />
+                                <div
+                                  className={clsx(
+                                    "w-2 h-2 rounded-full mt-2",
+                                    notification.read
+                                      ? "bg-gray-300"
+                                      : "bg-primary-500"
+                                  )}
+                                />
                                 <div className="flex-1 min-w-0">
                                   <p className="text-sm font-medium text-gray-900 truncate">
                                     {notification.title}
@@ -217,7 +245,9 @@ const Navbar = () => {
                                     {notification.message}
                                   </p>
                                   <p className="text-xs text-gray-400 mt-1">
-                                    {new Date(notification.timestamp).toLocaleDateString('vi-VN')}
+                                    {new Date(
+                                      notification.timestamp
+                                    ).toLocaleDateString("vi-VN")}
                                   </p>
                                 </div>
                               </div>
@@ -236,10 +266,10 @@ const Navbar = () => {
                     className="flex items-center space-x-2 p-1 rounded-full hover:bg-gray-100 transition-colors"
                   >
                     <div className="w-8 h-8 bg-gradient-to-r from-primary-500 to-secondary-500 rounded-full flex items-center justify-center text-white font-semibold text-sm">
-                      {user?.profile?.firstName?.charAt(0) || 'U'}
+                      {user?.profile?.firstName?.charAt(0) || "U"}
                     </div>
                     <span className="hidden md:block text-sm font-medium text-gray-700">
-                      {user?.profile?.firstName || 'User'}
+                      {user?.profile?.firstName || "User"}
                     </span>
                   </button>
 
@@ -286,10 +316,7 @@ const Navbar = () => {
                 >
                   Đăng nhập
                 </Button>
-                <Button
-                  size="small"
-                  onClick={() => navigate(ROUTES.REGISTER)}
-                >
+                <Button size="small" onClick={() => navigate(ROUTES.REGISTER)}>
                   Đăng ký
                 </Button>
               </>
@@ -300,7 +327,11 @@ const Navbar = () => {
               onClick={() => setIsMenuOpen(!isMenuOpen)}
               className="p-2 text-gray-600 hover:text-gray-900 lg:hidden"
             >
-              {isMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+              {isMenuOpen ? (
+                <X className="w-5 h-5" />
+              ) : (
+                <Menu className="w-5 h-5" />
+              )}
             </button>
           </div>
         </div>
@@ -310,7 +341,7 @@ const Navbar = () => {
           {isMenuOpen && (
             <motion.div
               initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: 'auto' }}
+              animate={{ opacity: 1, height: "auto" }}
               exit={{ opacity: 0, height: 0 }}
               className="lg:hidden border-t border-gray-200 py-4"
             >
@@ -321,12 +352,12 @@ const Navbar = () => {
                     to={link.path}
                     onClick={() => setIsMenuOpen(false)}
                     className={clsx(
-                      'flex items-center space-x-3 px-4 py-3 rounded-lg text-base font-medium transition-colors',
+                      "flex items-center space-x-3 px-4 py-3 rounded-lg text-base font-medium transition-colors",
                       isActivePath(link.path)
                         ? isKidMode()
-                          ? 'bg-primary-100 text-primary-700'
-                          : 'bg-gray-100 text-gray-900'
-                        : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+                          ? "bg-primary-100 text-primary-700"
+                          : "bg-gray-100 text-gray-900"
+                        : "text-gray-600 hover:text-gray-900 hover:bg-gray-50"
                     )}
                   >
                     <span className="text-lg">{link.icon}</span>
@@ -344,6 +375,22 @@ const Navbar = () => {
                       <Plus className="w-5 h-5" />
                       <span>Thêm đồ chơi</span>
                     </Link>
+                    <Link
+                      to={ROUTES.CHAT}
+                      onClick={() => setIsMenuOpen(false)}
+                      className="flex items-center space-x-3 px-4 py-3 text-base font-medium text-blue-600 hover:text-blue-700 hover:bg-blue-50 rounded-lg transition-colors"
+                    >
+                      <MessageCircle className="w-5 h-5" />
+                      <span>Chat</span>
+                    </Link>
+                    <Link
+                      to={ROUTES.FAVORITES}
+                      onClick={() => setIsMenuOpen(false)}
+                      className="flex items-center space-x-3 px-4 py-3 text-base font-medium text-pink-600 hover:text-pink-700 hover:bg-pink-50 rounded-lg transition-colors"
+                    >
+                      <Heart className="w-5 h-5" />
+                      <span>Yêu thích</span>
+                    </Link>
                   </div>
                 )}
               </div>
@@ -352,7 +399,7 @@ const Navbar = () => {
         </AnimatePresence>
       </div>
     </nav>
-  )
-}
+  );
+};
 
-export default Navbar
+export default Navbar;

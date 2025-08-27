@@ -1,43 +1,43 @@
-import { Component } from 'react'
-import { motion } from 'framer-motion'
-import { AlertTriangle, RefreshCw, Home } from 'lucide-react'
-import Button from '@/components/ui/Button'
+import { Component } from "react";
+import { motion } from "framer-motion";
+import { AlertTriangle, RefreshCw, Home } from "lucide-react";
+import Button from "@/components/ui/Button";
 
 class ErrorBoundary extends Component {
   constructor(props) {
-    super(props)
-    this.state = { hasError: false, error: null, errorInfo: null }
+    super(props);
+    this.state = { hasError: false, error: null, errorInfo: null };
   }
 
   static getDerivedStateFromError(error) {
     // Update state để next render sẽ show fallback UI
-    return { hasError: true }
+    return { hasError: true };
   }
 
   componentDidCatch(error, errorInfo) {
     // Log error để debugging
-    console.error('ErrorBoundary caught an error:', error, errorInfo)
+    console.error("ErrorBoundary caught an error:", error, errorInfo);
 
     this.setState({
       error: error,
-      errorInfo: errorInfo
-    })
+      errorInfo: errorInfo,
+    });
 
     // Có thể gửi error tới logging service
     // logErrorToService(error, errorInfo)
   }
 
-  handleReload = () => {
-    window.location.reload()
+  handleReload() {
+    window.location.reload();
   }
 
-  handleGoHome = () => {
-    window.location.href = '/'
+  handleGoHome() {
+    window.location.href = "/";
   }
 
   render() {
     if (this.state.hasError) {
-      const isProduction = import.meta.env.PROD
+      const isProduction = import.meta.env.PROD;
 
       return (
         <div className="min-h-screen bg-gradient-to-br from-red-50 to-pink-50 flex items-center justify-center p-4">
@@ -63,7 +63,8 @@ class ErrorBoundary extends Component {
 
             {/* Error Description */}
             <p className="text-gray-600 mb-6">
-              Đã có lỗi bất ngờ xảy ra. Chúng tôi đã ghi nhận và sẽ khắc phục sớm nhất có thể.
+              Đã có lỗi bất ngờ xảy ra. Chúng tôi đã ghi nhận và sẽ khắc phục
+              sớm nhất có thể.
             </p>
 
             {/* Error Details (Development only) */}
@@ -73,7 +74,9 @@ class ErrorBoundary extends Component {
                   Chi tiết lỗi (Dev only)
                 </summary>
                 <div className="mt-2 p-3 bg-red-50 rounded-lg text-xs text-red-700 overflow-auto max-h-32">
-                  <p className="font-medium mb-2">{this.state.error.toString()}</p>
+                  <p className="font-medium mb-2">
+                    {this.state.error.toString()}
+                  </p>
                   <pre className="whitespace-pre-wrap text-xs">
                     {this.state.errorInfo.componentStack}
                   </pre>
@@ -103,9 +106,9 @@ class ErrorBoundary extends Component {
 
             {/* Support Message */}
             <p className="mt-6 text-sm text-gray-500">
-              Nếu lỗi tiếp tục xảy ra, vui lòng liên hệ{' '}
-              <a 
-                href="mailto:support@toysharing.com" 
+              Nếu lỗi tiếp tục xảy ra, vui lòng liên hệ{" "}
+              <a
+                href="mailto:support@toysharing.com"
                 className="text-primary-600 hover:text-primary-700 underline"
               >
                 support@toysharing.com
@@ -113,12 +116,12 @@ class ErrorBoundary extends Component {
             </p>
           </motion.div>
         </div>
-      )
+      );
     }
 
     // Nếu không có lỗi, render children bình thường
-    return this.props.children
+    return this.props.children;
   }
 }
 
-export default ErrorBoundary
+export default ErrorBoundary;
