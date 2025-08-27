@@ -55,6 +55,36 @@ const bookingSchema = new mongoose.Schema(
       trim: true,
       maxlength: [500, "Phản hồi không được quá 500 ký tự"],
     },
+    paymentInfo: {
+      amount: {
+        type: Number,
+        required: [true, "Số tiền thanh toán là bắt buộc"],
+        min: [0, "Số tiền không được âm"],
+      },
+      method: {
+        type: String,
+        enum: {
+          values: ["cash", "bank_transfer", "momo", "zalopay"],
+          message: "Phương thức thanh toán không hợp lệ",
+        },
+        required: [true, "Phương thức thanh toán là bắt buộc"],
+      },
+      transactionId: {
+        type: String,
+        required: [true, "Mã giao dịch là bắt buộc"],
+      },
+      status: {
+        type: String,
+        enum: {
+          values: ["pending", "paid", "failed", "refunded"],
+          message: "Trạng thái thanh toán không hợp lệ",
+        },
+        default: "pending",
+      },
+      paidAt: {
+        type: Date,
+      },
+    },
   },
   {
     timestamps: true,

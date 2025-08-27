@@ -127,7 +127,7 @@ const getBooking = async (req, res) => {
 // @access  Private
 const createBooking = async (req, res) => {
   try {
-    const { toyId, startDate, endDate, borrowerMessage } = req.body;
+    const { toyId, startDate, endDate, borrowerMessage, paymentInfo } = req.body;
 
     // Kiểm tra toy có tồn tại và available
     const toy = await Toy.findOne({
@@ -169,7 +169,7 @@ const createBooking = async (req, res) => {
     // Kiểm tra conflict với các booking khác
     const conflictingBooking = await Booking.findOne({
       toy: toyId,
-      status: { $in: ["requested", "confirmed"] },
+      status: "confirmed", // Only check confirmed bookings since we skip requested status
       $or: [
         {
           startDate: { $lt: new Date(endDate) },
@@ -188,6 +188,22 @@ const createBooking = async (req, res) => {
       });
     }
 
+    // Validate payment info if provided
+    if (paymentInfo) {
+      if (!paymentInfo.amount || !paymentInfo.method || !paymentInfo.transactionId) {
+        return res.status(400).json({
+          success: false,
+          error: {
+            code: "INVALID_PAYMENT_INFO",
+            message: "Thông tin thanh toán không đầy đủ",
+          },
+        });
+      }
+    }
+
+    // Always create bookings in confirmed status (skip pending step)
+    const initialStatus = 'confirmed';
+
     // Tạo booking mới
     const booking = await Booking.create({
       toy: toyId,
@@ -196,7 +212,12 @@ const createBooking = async (req, res) => {
       startDate,
       endDate,
       borrowerMessage,
+      paymentInfo,
+      status: initialStatus,
     });
+
+    // Always update toy status to borrowed when booking is created
+    await Toy.findByIdAndUpdate(toyId, { status: "borrowed" });
 
     // Populate để trả về đầy đủ thông tin
     await booking.populate([
@@ -208,7 +229,7 @@ const createBooking = async (req, res) => {
     res.status(201).json({
       success: true,
       data: { booking },
-      message: "Gửi yêu cầu mượn thành công",
+      message: "Đặt mượn thành công! Bạn có thể bắt đầu sử dụng đồ chơi.",
     });
   } catch (error) {
     console.error("Create booking error:", error);

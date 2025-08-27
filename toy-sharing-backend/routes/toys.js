@@ -6,44 +6,27 @@ const {
   updateToy,
   deleteToy,
   getMyToys,
+  getCategories,
 } = require("../controllers/toyController");
+const { auth } = require("../middleware/auth");
 const {
   validateToy,
   validateObjectId,
   validateQueryParams,
 } = require("../middleware/validation");
-const { auth } = require("../middleware/auth");
 
 const router = express.Router();
 
-// @route   GET /api/toys
-// @desc    Lấy danh sách tất cả đồ chơi (với search & filter)
-// @access  Public
+// PUBLIC
+router.get("/categories", getCategories); // <- đặt TRƯỚC /:id, không validate
 router.get("/", validateQueryParams, getToys);
-
-// @route   GET /api/toys/my-toys
-// @desc    Lấy đồ chơi của user hiện tại
-// @access  Private
 router.get("/my-toys", auth, getMyToys);
+router.get("/:id", validateObjectId("id"), getToy); // <- sau cùng trong nhóm GET
 
-// @route   GET /api/toys/:id
-// @desc    Lấy chi tiết một đồ chơi
-// @access  Public
-router.get("/:id", validateObjectId("id"), getToy);
+// PRIVATE
 
-// @route   POST /api/toys
-// @desc    Tạo đồ chơi mới
-// @access  Private
 router.post("/", auth, validateToy, createToy);
-
-// @route   PUT /api/toys/:id
-// @desc    Cập nhật đồ chơi
-// @access  Private (Owner only)
 router.put("/:id", auth, validateObjectId("id"), validateToy, updateToy);
-
-// @route   DELETE /api/toys/:id
-// @desc    Xóa đồ chơi
-// @access  Private (Owner only)
 router.delete("/:id", auth, validateObjectId("id"), deleteToy);
 
 module.exports = router;

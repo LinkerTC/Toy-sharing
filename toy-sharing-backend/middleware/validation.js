@@ -75,18 +75,8 @@ const validateToy = [
     .isLength({ min: 1, max: 1000 })
     .withMessage("Mô tả phải có từ 1-1000 ký tự"),
 
-  body("category")
-    .isIn([
-      "educational",
-      "construction",
-      "dolls",
-      "vehicles",
-      "sports",
-      "arts_crafts",
-      "electronic",
-      "other",
-    ])
-    .withMessage("Danh mục không hợp lệ"),
+  // CHANGED: category là ObjectId
+  body("category").isMongoId().withMessage("Category phải là ObjectId hợp lệ"),
 
   body("ageGroup")
     .isIn(["0-2", "3-5", "6-8", "9-12", "13-15"])
@@ -104,6 +94,15 @@ const validateToy = [
   body("images").optional().isArray().withMessage("Hình ảnh phải là một mảng"),
 
   body("images.*").optional().isURL().withMessage("URL hình ảnh không hợp lệ"),
+
+  // NEW: price
+  body("price")
+    .exists()
+    .withMessage("Giá là bắt buộc")
+    .isNumeric()
+    .withMessage("Giá phải là số")
+    .custom((v) => Number(v) >= 0)
+    .withMessage("Giá không được âm"),
 
   body("ownerNotes")
     .optional()
@@ -183,23 +182,19 @@ const validateQueryParams = [
 
   query("category")
     .optional()
-    .isIn([
-      "educational",
-      "construction",
-      "dolls",
-      "vehicles",
-      "sports",
-      "arts_crafts",
-      "electronic",
-      "other",
-    ])
-    .withMessage("Danh mục không hợp lệ"),
+    .isString()
+    .trim()
+    .notEmpty()
+    .withMessage("Category phải là chuỗi (name hoặc ObjectId)"),
 
   query("ageGroup")
     .optional()
     .isIn(["0-2", "3-5", "6-8", "9-12", "13-15"])
     .withMessage("Nhóm tuổi không hợp lệ"),
 
+  // Optional: price range
+  query("priceMin").optional().isNumeric().withMessage("priceMin phải là số"),
+  query("priceMax").optional().isNumeric().withMessage("priceMax phải là số"),
   handleValidationErrors,
 ];
 

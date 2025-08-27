@@ -20,21 +20,9 @@ const toySchema = new mongoose.Schema(
       maxlength: [1000, "Mô tả không được quá 1000 ký tự"],
     },
     category: {
-      type: String,
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Category",
       required: [true, "Danh mục là bắt buộc"],
-      enum: {
-        values: [
-          "educational",
-          "construction",
-          "dolls",
-          "vehicles",
-          "sports",
-          "arts_crafts",
-          "electronic",
-          "other",
-        ],
-        message: "Danh mục không hợp lệ",
-      },
     },
     ageGroup: {
       type: String,
@@ -56,9 +44,7 @@ const toySchema = new mongoose.Schema(
       {
         type: String,
         validate: {
-          validator: function (v) {
-            return /^https?:\/\/.+\.(jpg|jpeg|png|gif|webp)$/i.test(v);
-          },
+          validator: (v) => /^https?:\/\/.+\.(jpg|jpeg|png|gif|webp)$/i.test(v),
           message: "URL hình ảnh không hợp lệ",
         },
       },
@@ -80,27 +66,31 @@ const toySchema = new mongoose.Schema(
     ownerNotes: {
       type: String,
       trim: true,
-      maxlength: [500, "Ghi chú không được quá 500 ký tự"],
     },
-    isActive: {
-      type: Boolean,
-      default: true,
+    // NEW: price
+    price: {
+      type: Number,
+      required: [true, "Giá là bắt buộc"],
+      min: [0, "Giá không được âm"], // validator min cho Number [web:199][web:189][web:201]
     },
+    isActive: { type: Boolean, default: true },
   },
-  {
-    timestamps: true,
-  }
+  { timestamps: true }
 );
 
-// Indexes cho performance
+// Indexes
 toySchema.index({ owner: 1 });
 toySchema.index({ status: 1, category: 1 });
 toySchema.index({ createdAt: -1 });
-toySchema.index({ name: "text", description: "text" }); // Text search
+toySchema.index({ price: 1 }); // NEW index cho price [web:207][web:205]
+toySchema.index({ name: "text", description: "text" });
 
-// Populate owner info khi query
+// Populate
 toySchema.pre(/^find/, function (next) {
-  this.populate("owner", "profile stats");
+  this.populate("owner", "profile stats").populate(
+    "category",
+    "name displayName icon"
+  );
   next();
 });
 
