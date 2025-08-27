@@ -1,12 +1,16 @@
 // pages/toys/ToyDetail.jsx
 import { useEffect, useState, useMemo } from 'react'
 import { useParams, Link } from 'react-router-dom'
+import BookingForm from '@/components/features/bookings/BookingForm'
 
 const ToyDetail = () => {
   const { id } = useParams()
   const [toy, setToy] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
+  
+  // Booking modal state
+  const [isBookingModalOpen, setIsBookingModalOpen] = useState(false)
 
   // Fallback categories nếu server chưa populate
   const fallbackCategories = useMemo(() => ({
@@ -45,6 +49,28 @@ const ToyDetail = () => {
     fetchDetail()
     return () => controller.abort()
   }, [id])
+
+  // Booking handlers
+  const handleBookingClick = () => {
+    setIsBookingModalOpen(true)
+  }
+
+  const handleBookingSuccess = () => {
+    // Refresh toy data after successful booking
+    const controller = new AbortController()
+    const fetchDetail = async () => {
+      try {
+        const res = await fetch(`http://localhost:3000/api/toys/${id}`, { signal: controller.signal })
+        const json = await res.json()
+        if (res.ok) {
+          setToy(json?.data?.toy || null)
+        }
+      } catch (e) {
+        // Ignore errors during refresh
+      }
+    }
+    fetchDetail()
+  }
 
   if (loading) {
     return (
@@ -220,9 +246,10 @@ const ToyDetail = () => {
               <button
                 className="w-full btn btn-primary btn-lg mb-4"
                 disabled={toy.status !== 'available'}
-                title={toy.status !== 'available' ? 'Đồ chơi đang mượn' : 'Liên hệ mượn'}
+                onClick={handleBookingClick}
+                title={toy.status !== 'available' ? 'Đồ chơi đang mượn' : 'Đặt mượn đồ chơi'}
               >
-                {toy.status === 'available' ? '📞 Liên hệ mượn' : '⏳ Đang mượn'}
+                {toy.status === 'available' ? '📅 Đặt mượn' : '⏳ Đang mượn'}
               </button>
 
               <div className="bg-yellow-50 rounded-lg p-3">
@@ -239,6 +266,14 @@ const ToyDetail = () => {
             {/* Có thể bổ sung danh sách các đồ chơi khác của chủ sở hữu */}
           </div>
         </div>
+
+        {/* Booking Modal */}
+        <BookingForm
+          toy={toy}
+          isOpen={isBookingModalOpen}
+          onClose={() => setIsBookingModalOpen(false)}
+          onSuccess={handleBookingSuccess}
+        />
       </div>
     </div>
   )
