@@ -5,13 +5,13 @@ import { QueryClient, QueryClientProvider } from "react-query";
 import { ReactQueryDevtools } from "react-query/devtools";
 import { Toaster } from "react-hot-toast";
 
-import App from "./App.jsx";
-import { AuthProvider } from "./context/AuthContext.jsx";
-import { ThemeProvider } from "./context/ThemeContext.jsx";
-import { NotificationProvider } from "./context/NotificationContext.jsx";
-import ErrorBoundary from "./components/common/ErrorBoundary.jsx";
-
-import "./index.css";
+import App from './App.jsx'
+import { AuthProvider } from './context/AuthContext.jsx'
+import { ThemeProvider } from './context/ThemeContext.jsx'
+import { NotificationProvider } from './context/NotificationContext.jsx'
+import ErrorBoundary from './components/common/ErrorBoundary.jsx'
+import { GoogleOAuthProvider } from '@react-oauth/google'
+import './index.css'
 
 // React Query configuration
 const queryClient = new QueryClient({
@@ -29,6 +29,7 @@ const isDevelopment = import.meta.env.DEV;
 
 ReactDOM.createRoot(document.getElementById("root")).render(
   <React.StrictMode>
+    <GoogleOAuthProvider clientId={import.meta.env.VITE_GG_CLIENT_ID}>
     <ErrorBoundary>
       <QueryClientProvider client={queryClient}>
         <BrowserRouter>
@@ -80,8 +81,9 @@ ReactDOM.createRoot(document.getElementById("root")).render(
         </BrowserRouter>
       </QueryClientProvider>
     </ErrorBoundary>
-  </React.StrictMode>
-);
+    </GoogleOAuthProvider>
+  </React.StrictMode>,
+)
 
 // Performance monitoring
 if (isDevelopment) {

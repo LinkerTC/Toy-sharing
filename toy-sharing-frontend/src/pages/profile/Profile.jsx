@@ -1,10 +1,12 @@
 import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
 
 const Profile = () => {
   const { user } = useAuth()
   const [isEditing, setIsEditing] = useState(false)
   const [loading, setLoading] = useState(true)
+  const navigate = useNavigate()
 //   if(user){
 //     setLoading(false)
 //   }
@@ -73,12 +75,12 @@ const Profile = () => {
                   </div>
                 </div>
 
-                <button 
-                  onClick={() => setIsEditing(!isEditing)}
+                <button
+                  onClick={() => navigate('/profile/edit')}
                   className="btn btn-primary"
                 >
                   <span>✏️</span>
-                  <span>{isEditing ? 'Hủy chỉnh sửa' : 'Chỉnh sửa hồ sơ'}</span>
+                  <span>Chỉnh sửa hồ sơ</span>
                 </button>
               </div>
             </div>
@@ -143,6 +145,21 @@ const Profile = () => {
                 ) : (
                   <div className="p-3 bg-gray-50 rounded-lg">
                     {user?.profile?.phone || 'Chưa cập nhật'}
+                  </div>
+                )}
+              </div>
+              <div>
+                <label className="form-label">Địa chỉ</label>
+                {isEditing ? (
+                  <input 
+                    type="text" 
+                    defaultValue={user?.profile?.address || ''} 
+                    className="form-input" 
+                    placeholder="123 Đường phố, Quận, Thành phố"
+                  />
+                ) : (
+                  <div className="p-3 bg-gray-50 rounded-lg">
+                    {user?.profile?.address || 'Chưa cập nhật'}
                   </div>
                 )}
               </div>

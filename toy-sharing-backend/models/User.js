@@ -15,19 +15,19 @@ const userSchema = new mongoose.Schema(
     },
     password: {
       type: String,
-      required: [true, "Mật khẩu là bắt buộc"],
+      // required: [true, "Mật khẩu là bắt buộc"],
       minlength: [6, "Mật khẩu phải có ít nhất 6 ký tự"],
     },
     profile: {
       firstName: {
         type: String,
-        required: [true, "Tên là bắt buộc"],
+        // required: [true, "Tên là bắt buộc"],
         trim: true,
         maxlength: [50, "Tên không được quá 50 ký tự"],
       },
       lastName: {
         type: String,
-        required: [true, "Họ là bắt buộc"],
+        // required: [true, "Họ là bắt buộc"],
         trim: true,
         maxlength: [50, "Họ không được quá 50 ký tự"],
       },
@@ -62,7 +62,13 @@ const userSchema = new mongoose.Schema(
     },
     isActive: {
       type: Boolean,
-      default: true,
+      default: false,
+    },
+    otp: {
+      type: String,
+    },
+    otpExpires: {
+      type: Date,
     },
     favorites: [
       {

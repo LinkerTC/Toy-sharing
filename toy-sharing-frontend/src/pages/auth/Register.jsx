@@ -1,4 +1,6 @@
-import { useState } from 'react'
+import { GoogleLogin } from '@react-oauth/google'
+import axios from 'axios'
+import { useState, useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
 import { useNotifications } from '../../context/NotificationContext'
@@ -16,9 +18,16 @@ const Register = () => {
   })
   const [errors, setErrors] = useState({})
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [googleLoading, setGoogleLoading] = useState(false)
+  const [provinces, setProvinces] = useState([]);
+  const [selectedProvince, setSelectedProvince] = useState(null);
+  const [selectedWard, setSelectedWard] = useState(null);
+  const [street, setStreet] = useState("");
+
+  const fullAddress = `${street}, ${selectedWard?.name || ""}, ${selectedProvince?.name || ""}`;
 
   const { register } = useAuth()
-  const { success, error } = useNotifications()
+  // const { success, error } = useNotifications()
   const navigate = useNavigate()
 
   const validateForm = () => {
@@ -54,10 +63,8 @@ const Register = () => {
       newErrors.phone = 'Số điện thoại không hợp lệ'
     }
 
-    if (!formData.address.trim()) {
+    if (!street.trim()) {
       newErrors.address = 'Địa chỉ là bắt buộc'
-    } else if (formData.address.length < 5) {
-      newErrors.address = 'Địa chỉ phải có ít nhất 5 ký tự'
     }
 
     if (!formData.acceptTerms) {
@@ -67,6 +74,28 @@ const Register = () => {
     setErrors(newErrors)
     return Object.keys(newErrors).length === 0
   }
+
+  useEffect(() => {
+    const fetchProvinces = async () => {
+      const res = await fetch("https://provinces.open-api.vn/api/v2/?depth=2");
+      const data = await res.json();
+      setProvinces(data);
+    };
+    fetchProvinces();
+  }, []);
+
+  const handleProvinceChange = (e) => {
+    const code = Number(e.target.value);
+    const province = provinces.find(p => p.code === code);
+    setSelectedProvince(province);
+    setSelectedWard(null);
+  };
+
+  const handleWardChange = (e) => {
+    const code = Number(e.target.value);
+    const ward = selectedProvince.wards.find(w => w.code === code);
+    setSelectedWard(ward);
+  };
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target
@@ -102,28 +131,62 @@ const Register = () => {
             firstName: formData.firstName.trim(),
             lastName: formData.lastName.trim(),
             phone: formData.phone,
-            address: formData.address.trim()
+            address: fullAddress.trim()
           }
         })
       });
       const result = await response.json();
 
-      if (result.success) {
-        success(result.message || 'Đăng ký thành công!')
-        
+      if (response.status === 409) {
+        setErrors(prev => ({
+          ...prev,
+          email: 'Email đã tồn tại'
+        }))
+        setIsSubmitting(false)
+        return
       }
-      error(result.message || result.error || 'Đăng ký thất bại')
+
+      if (response.status === 201) {
+        setTimeout(() => {
+          navigate('/verify?email=' + formData.email, { replace: true })
+        }, 500)
+        setIsSubmitting(false)
+      } else {
+        setErrors(result.message || 'Có lỗi xảy ra. Vui lòng thử lại.')
+        setIsSubmitting(false)
+      }
     } catch (err) {
-      error('Có lỗi xảy ra. Vui lòng thử lại.')
-    }
-    finally {
+      setErrors('Có lỗi xảy ra. Vui lòng thử lại.')
       setIsSubmitting(false)
-      setTimeout(() => {
-        navigate('/', { replace: true })
-      }, 500)
+    } finally {
+      setIsSubmitting(false)
     }
   }
 
+  // Google Login callback handler
+  const handleGoogleSuccess = async (credentialResponse) => {
+    if (!credentialResponse.credential) return;
+    setGoogleLoading(true);
+    try {
+      const res = await axios.post('http://localhost:3000/api/auth/google', {
+        token: credentialResponse.credential
+      });
+      localStorage.setItem('token', res.data.token);
+      // If success, redirect to home
+      navigate("/");
+      window.location.reload();
+    } catch (err) {
+      // You might want to show error here
+      // Optionally: setErrors({ google: "Đăng nhập Google thất bại" });
+    } finally {
+      setGoogleLoading(false);
+    }
+  };
+
+  const handleGoogleFailure = () => {
+    // Optionally handle failure
+    // setErrors({ google: "Đăng nhập Google thất bại" });
+  };
   return (
     <div className="min-h-screen flex items-center justify-center hero-bg p-4 py-12 relative overflow-hidden">
       {/* Floating Toys Background */}
@@ -234,7 +297,7 @@ const Register = () => {
                 Địa chỉ
                 <span className="text-red-500 ml-1">*</span>
               </label>
-              <input
+              {/* <input
                 type="text"
                 name="address"
                 value={formData.address}
@@ -242,6 +305,30 @@ const Register = () => {
                 className={`form-input ${errors.address ? 'border-red-500 focus:border-red-500 focus:ring-red-100' : ''}`}
                 placeholder="Nhập địa chỉ của bạn"
                 disabled={isSubmitting}
+              /> */}
+              <select onChange={handleProvinceChange} className="form-input 'border-red-500 focus:ring-red-100 pt-2'">
+                <option value="">Chọn Tỉnh/Thành phố</option>
+                {provinces.map(p => (
+                  <option key={p.code} value={p.code}>{p.name}</option>
+                ))}
+              </select>
+
+              {selectedProvince && (
+                <select onChange={handleWardChange} className="form-input 'border-red-500 focus:ring-red-100' mt-2">
+                  <option value="">Chọn Xã/Phường</option>
+                  {selectedProvince.wards.map(w => (
+                    <option key={w.code} value={w.code}>{w.name}</option>
+                  ))}
+                </select>
+              )}
+
+              <input
+                type="text"
+                value={street}
+                name="address"
+                onChange={(e) => setStreet(e.target.value)}
+                placeholder="Số nhà, đường"
+                className="form-input 'border-red-500 focus:ring-red-100' mt-2"
               />
               {errors.address && (
                 <div className="form-error">
@@ -348,7 +435,16 @@ const Register = () => {
             <button
               type="submit"
               className="w-full btn btn-primary btn-lg"
-              disabled={isSubmitting}
+              disabled={
+                isSubmitting ||
+                !formData.firstName.trim() ||
+                !formData.lastName.trim() ||
+                !formData.email.trim() ||
+                !formData.password ||
+                !formData.confirmPassword ||
+                !formData.acceptTerms ||
+                !street
+              }
             >
               {isSubmitting ? (
                 <>
@@ -376,14 +472,27 @@ const Register = () => {
 
           {/* Social Register */}
           <div className="space-y-3">
-            <button className="w-full btn btn-outline">
-              <span>📘</span>
-              <span>Đăng ký với Facebook</span>
-            </button>
-            <button className="w-full btn btn-outline">
-              <span>🌐</span>
-              <span>Đăng ký với Google</span>
-            </button>
+            <div className="w-full flex justify-center">
+              <GoogleLogin
+                onSuccess={handleGoogleSuccess}
+                onError={handleGoogleFailure}
+                text="signup_with"
+                width="100%"
+                useOneTap={false}
+                shape="rectangular"
+                theme="outline"
+                size="large"
+                logo_alignment="left"
+                disabled={googleLoading}
+              />
+            </div>
+            {/* Optionally show loading indicator */}
+            {googleLoading && (
+              <div className="flex justify-center mt-2">
+                <div className="spinner-sm"></div>
+                <span className="ml-2 text-gray-500">Đang đăng ký với Google...</span>
+              </div>
+            )}
           </div>
 
           {/* Footer */}
