@@ -270,7 +270,7 @@ const MyBookings = () => {
                       </Link>
 
 
-                      {mapStatus(booking.status) === 'active' && (
+                      {/* {mapStatus(booking.status) === 'active' && (
                         <button 
                           onClick={() => handleReturnToy(booking._id || booking.id)}
                           disabled={updateBookingStatus.isLoading}
@@ -278,7 +278,7 @@ const MyBookings = () => {
                         >
                           ✅ Trả về
                         </button>
-                      )}
+                      )} */}
 
                       {mapStatus(booking.status) === 'completed' && !booking.rating && (
                         <button className="px-4 py-2 bg-yellow-100 text-yellow-700 rounded-lg font-medium hover:bg-yellow-200 transition-colors">
