@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import axios from 'axios'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
 
@@ -11,8 +12,7 @@ const EditProfile = () => {
     lastName: '',
     email: '',
     phone: '',
-    location: '',
-    bio: ''
+    address: '',
   })
   const [errors, setErrors] = useState({})
 
@@ -29,8 +29,7 @@ const EditProfile = () => {
         lastName: user.profile?.lastName || '',
         email: user.email || '',
         phone: user.profile?.phone || '',
-        location: user.profile?.location || '',
-        bio: user.profile?.bio || ''
+        address: user.profile?.address || '',
       })
     }
   }, [user])
@@ -73,11 +72,22 @@ const EditProfile = () => {
             firstName: formData.firstName,
             lastName: formData.lastName,
             phone: formData.phone,
-            location: formData.location,
-            bio: formData.bio
+            address: formData.address,
           }
         })
       }
+      const response = await axios.put('http://localhost:3000/api/users/profile',
+        {
+          profile: {
+            firstName: formData.firstName,
+            lastName: formData.lastName,
+            phone: formData.phone,
+            address: formData.address,
+          }
+        },
+        { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } }
+      )
+      console.log(response.data)
 
       alert('Cập nhật thông tin thành công! ✅')
       navigate('/profile')
@@ -229,8 +239,8 @@ const EditProfile = () => {
               </label>
               <input
                 type="text"
-                name="location"
-                value={formData.location}
+                name="address"
+                value={formData.address}
                 onChange={handleChange}
                 className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-pink-500 transition-colors"
                 placeholder="VD: Quận 1, TP.HCM"
@@ -238,7 +248,7 @@ const EditProfile = () => {
               />
             </div>
 
-            <div>
+            {/* <div>
               <label className="block font-medium mb-2 text-gray-700">
                 ✏️ Giới thiệu bản thân
               </label>
@@ -254,7 +264,7 @@ const EditProfile = () => {
               <div className="text-xs text-gray-500 mt-1">
                 {formData.bio.length}/500 ký tự
               </div>
-            </div>
+            </div> */}
 
             {/* Privacy Settings */}
             <div className="pt-6 border-t border-gray-200">

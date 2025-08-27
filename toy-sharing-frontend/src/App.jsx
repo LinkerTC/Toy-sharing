@@ -16,6 +16,7 @@ const HowItWorks = lazy(() => import('./pages/HowItWorks'))
 // Auth pages
 const Login = lazy(() => import('./pages/auth/Login'))
 const Register = lazy(() => import('./pages/auth/Register'))
+const VerifyPage = lazy(() => import('./pages/auth/VerifyPage'))
 
 // Toy pages
 const ToyBrowse = lazy(() => import('./pages/toys/ToyBrowse'))
@@ -66,6 +67,7 @@ function App() {
           {/* Auth Routes (No Layout) */}
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
+          <Route path="/verify" element={<VerifyPage />} />
 
           {/* Protected Routes */}
           <Route path="/" element={<Layout />}>
