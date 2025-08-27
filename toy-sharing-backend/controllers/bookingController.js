@@ -169,7 +169,7 @@ const createBooking = async (req, res) => {
     // Kiểm tra conflict với các booking khác
     const conflictingBooking = await Booking.findOne({
       toy: toyId,
-      status: { $in: ["requested", "confirmed"] },
+      status: "confirmed", // Only check confirmed bookings since we skip requested status
       $or: [
         {
           startDate: { $lt: new Date(endDate) },
@@ -201,8 +201,8 @@ const createBooking = async (req, res) => {
       }
     }
 
-    // Determine initial status based on payment
-    const initialStatus = paymentInfo && paymentInfo.status === 'paid' ? 'confirmed' : 'requested';
+    // Always create bookings in confirmed status (skip pending step)
+    const initialStatus = 'confirmed';
 
     // Tạo booking mới
     const booking = await Booking.create({
@@ -216,10 +216,8 @@ const createBooking = async (req, res) => {
       status: initialStatus,
     });
 
-    // Update toy status if payment is successful
-    if (initialStatus === 'confirmed') {
-      await Toy.findByIdAndUpdate(toyId, { status: "borrowed" });
-    }
+    // Always update toy status to borrowed when booking is created
+    await Toy.findByIdAndUpdate(toyId, { status: "borrowed" });
 
     // Populate để trả về đầy đủ thông tin
     await booking.populate([
@@ -231,7 +229,7 @@ const createBooking = async (req, res) => {
     res.status(201).json({
       success: true,
       data: { booking },
-      message: "Gửi yêu cầu mượn thành công",
+      message: "Đặt mượn thành công! Bạn có thể bắt đầu sử dụng đồ chơi.",
     });
   } catch (error) {
     console.error("Create booking error:", error);
