@@ -85,6 +85,28 @@ const bookingSchema = new mongoose.Schema(
         type: Date,
       },
     },
+    rating: {
+      score: {
+        type: Number,
+        min: [1, "Điểm đánh giá tối thiểu là 1"],
+        max: [5, "Điểm đánh giá tối đa là 5"],
+      },
+      comment: {
+        type: String,
+        trim: true,
+        maxlength: [500, "Bình luận không được quá 500 ký tự"],
+      },
+      ratedAt: {
+        type: Date,
+      },
+    },
+    returnedAt: {
+      type: Date,
+    },
+    autoReturned: {
+      type: Boolean,
+      default: false,
+    },
   },
   {
     timestamps: true,

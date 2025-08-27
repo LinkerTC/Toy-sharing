@@ -4,6 +4,9 @@ const {
   getBooking,
   createBooking,
   updateBookingStatus,
+  returnToy,
+  checkExpiredBookings,
+  rateBooking,
 } = require("../controllers/bookingController");
 const {
   validateBooking,
@@ -41,5 +44,20 @@ router.put(
   validateBookingStatus,
   updateBookingStatus
 );
+
+// @route   PUT /api/bookings/:id/return
+// @desc    Trả đồ chơi (hoàn thành booking)
+// @access  Private (Borrower only)
+router.put("/:id/return", validateObjectId("id"), returnToy);
+
+// @route   POST /api/bookings/check-expired
+// @desc    Kiểm tra và tự động trả các booking hết hạn
+// @access  Private
+router.post("/check-expired", checkExpiredBookings);
+
+// @route   PUT /api/bookings/:id/rate
+// @desc    Đánh giá booking đã hoàn thành
+// @access  Private (Borrower only)
+router.put("/:id/rate", validateObjectId("id"), rateBooking);
 
 module.exports = router;
