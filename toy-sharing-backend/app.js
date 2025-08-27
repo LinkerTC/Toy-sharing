@@ -10,7 +10,8 @@ const userRoutes = require("./routes/users");
 const toyRoutes = require("./routes/toys");
 const bookingRoutes = require("./routes/bookings");
 const categoryRoutes = require("./routes/categories");
-
+const favoriteRoutes = require("./routes/favorite");
+const { initializeSocketRoutes } = require("./routes/socketRoutes");
 const app = express();
 
 // Trust proxy (for Heroku deployment)
@@ -82,6 +83,38 @@ app.use("/api/users", userRoutes);
 app.use("/api/toys", toyRoutes);
 app.use("/api/bookings", bookingRoutes);
 app.use("/api/categories", categoryRoutes);
+app.use("/api/favorites", favoriteRoutes);
+
+// Socket.io initialization function (to be called from server.js)
+app.initializeSocket = (io) => {
+  const socketManager = initializeSocketRoutes(io);
+  app.set("socketManager", socketManager);
+  return socketManager.io;
+};
+
+// Socket status endpoint
+app.get("/api/socket/status", (req, res) => {
+  try {
+    const socketManager = req.app.get("socketManager");
+    res.status(200).json({
+      success: true,
+      message: "Socket.IO status retrieved successfully",
+      data: {
+        connected: socketManager ? true : false,
+        activeUsers: socketManager ? socketManager.getActiveUsers().length : 0,
+        timestamp: new Date().toISOString(),
+      },
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      error: {
+        code: "SOCKET_STATUS_ERROR",
+        message: "Không thể lấy trạng thái Socket.IO",
+      },
+    });
+  }
+});
 
 // 404 handler for API routes
 app.use("/api/*", (req, res) => {
@@ -107,6 +140,18 @@ app.get("/", (req, res) => {
       toys: "/api/toys",
       bookings: "/api/bookings",
       categories: "/api/categories",
+      favorites: "/api/favorites",
+      socket: "/api/socket/status",
+    },
+    realtime: {
+      enabled: true,
+      protocol: "Socket.IO",
+      events: [
+        "notification",
+        "receive-message",
+        "toy-updated",
+        "user-status-changed",
+      ],
     },
   });
 });

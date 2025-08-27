@@ -1,5 +1,6 @@
 const Toy = require("../models/Toy");
 const User = require("../models/User");
+const { broadcastToyUpdate, sendNotification } = require('../utils/socket');
 
 // @desc    Lấy danh sách tất cả đồ chơi
 // @route   GET /api/toys
@@ -165,6 +166,16 @@ const createToy = async (req, res) => {
     // Populate owner info
     await toy.populate("owner", "profile stats");
 
+    // Get socket instance
+    const io = req.app.get('io');
+    
+    // Send notification to interested users
+    sendNotification(io, 'all-users', {
+      type: 'new-toy',
+      message: `Đồ chơi mới: ${toy.name}`,
+      toyId: toy._id
+    });
+    
     res.status(201).json({
       success: true,
       data: { toy },
@@ -266,6 +277,14 @@ const updateToy = async (req, res) => {
         runValidators: true,
       }
     ).populate("owner", "profile stats");
+
+    // Broadcast cập nhật
+    const io = req.app.get('io');
+    broadcastToyUpdate(io, {
+      type: 'TOY_UPDATED',
+      toy: updatedToy,
+      message: `Đồ chơi ${updatedToy.name} đã được cập nhật`
+    });
 
     res.status(200).json({
       success: true,
