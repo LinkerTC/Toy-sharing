@@ -1,6 +1,7 @@
 // pages/toys/Toys.jsx
 import { useState, useEffect, useMemo, useRef } from 'react'
 import { useSearchParams, Link, useNavigate } from 'react-router-dom'
+import BookingForm from '@/components/features/bookings/BookingForm'
 
 const DEFAULT_LIMIT = 12
 
@@ -26,7 +27,11 @@ const Toys = () => {
   // 2) State nhập liệu (không trigger fetch ngay khi gõ)
   const [localFilters, setLocalFilters] = useState(appliedFilters)
 
-  // 3) Debounce 500ms để sync local -> applied, rồi update URL
+  // 3) Booking modal state
+  const [selectedToy, setSelectedToy] = useState(null)
+  const [isBookingModalOpen, setIsBookingModalOpen] = useState(false)
+
+  // 4) Debounce 500ms để sync local -> applied, rồi update URL
   const debounceTimer = useRef(null)
   useEffect(() => {
     if (debounceTimer.current) clearTimeout(debounceTimer.current)
@@ -87,7 +92,34 @@ const Toys = () => {
     if (e.key === 'Enter') e.preventDefault()
   }
 
-  // 6) Điều khiển phân trang (không đụng input)
+  // 6) Booking handlers
+  const handleBookingClick = (toy) => {
+    setSelectedToy(toy)
+    setIsBookingModalOpen(true)
+  }
+
+  const handleBookingSuccess = () => {
+    // Refresh toys list after successful booking
+    const controller = new AbortController()
+    const loadToys = async () => {
+      try {
+        const qs = new URLSearchParams()
+        Object.entries(appliedFilters).forEach(([k, v]) => {
+          if (v !== undefined && v !== null && v !== '') qs.set(k, v)
+        })
+        const res = await fetch(`http://localhost:3000/api/toys?${qs.toString()}`, { signal: controller.signal })
+        const json = await res.json()
+        if (res.ok) {
+          setToys(json?.data?.toys || [])
+        }
+      } catch (e) {
+        // Ignore errors during refresh
+      }
+    }
+    loadToys()
+  }
+
+  // 7) Điều khiển phân trang (không đụng input)
   const goToPage = (page) => {
     const next = { ...appliedFilters, page }
     setAppliedFilters(next)
@@ -309,7 +341,11 @@ const Toys = () => {
                     <Link to={`/toys/${toy._id}`} className="w-full btn btn-primary btn-sm">
                       👀 Xem chi tiết
                     </Link>
-                    <button className="w-full btn btn-outline btn-sm" disabled={toy.status !== 'available'}>
+                    <button 
+                      className="w-full btn btn-outline btn-sm" 
+                      disabled={toy.status !== 'available'}
+                      onClick={() => handleBookingClick(toy)}
+                    >
                       📅 Đặt mượn
                     </button>
                   </div>
@@ -350,6 +386,17 @@ const Toys = () => {
             Sau →
           </button>
         </div>
+
+        {/* Booking Modal */}
+        <BookingForm
+          toy={selectedToy}
+          isOpen={isBookingModalOpen}
+          onClose={() => {
+            setIsBookingModalOpen(false)
+            setSelectedToy(null)
+          }}
+          onSuccess={handleBookingSuccess}
+        />
       </div>
     </div>
   )

@@ -127,7 +127,7 @@ const getBooking = async (req, res) => {
 // @access  Private
 const createBooking = async (req, res) => {
   try {
-    const { toyId, startDate, endDate, borrowerMessage } = req.body;
+    const { toyId, startDate, endDate, borrowerMessage, paymentInfo } = req.body;
 
     // Kiểm tra toy có tồn tại và available
     const toy = await Toy.findOne({
@@ -188,6 +188,22 @@ const createBooking = async (req, res) => {
       });
     }
 
+    // Validate payment info if provided
+    if (paymentInfo) {
+      if (!paymentInfo.amount || !paymentInfo.method || !paymentInfo.transactionId) {
+        return res.status(400).json({
+          success: false,
+          error: {
+            code: "INVALID_PAYMENT_INFO",
+            message: "Thông tin thanh toán không đầy đủ",
+          },
+        });
+      }
+    }
+
+    // Determine initial status based on payment
+    const initialStatus = paymentInfo && paymentInfo.status === 'paid' ? 'confirmed' : 'requested';
+
     // Tạo booking mới
     const booking = await Booking.create({
       toy: toyId,
@@ -196,7 +212,14 @@ const createBooking = async (req, res) => {
       startDate,
       endDate,
       borrowerMessage,
+      paymentInfo,
+      status: initialStatus,
     });
+
+    // Update toy status if payment is successful
+    if (initialStatus === 'confirmed') {
+      await Toy.findByIdAndUpdate(toyId, { status: "borrowed" });
+    }
 
     // Populate để trả về đầy đủ thông tin
     await booking.populate([
