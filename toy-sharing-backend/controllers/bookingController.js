@@ -38,7 +38,14 @@ const getBookings = async (req, res) => {
       .skip(skip)
       .populate("borrower", "profile")
       .populate("lender", "profile")
-      .populate("toy", "name images category ageGroup pickupAddress");
+      .populate({
+        path: "toy",
+        select: "name images category ageGroup pickupAddress owner",
+        populate: {
+          path: "owner",
+          select: "profile"
+        }
+      });
 
     const total = await Booking.countDocuments(query);
     const totalPages = Math.ceil(total / limit);
@@ -77,10 +84,14 @@ const getBooking = async (req, res) => {
     const booking = await Booking.findById(req.params.id)
       .populate("borrower", "profile stats")
       .populate("lender", "profile stats")
-      .populate(
-        "toy",
-        "name description images category ageGroup condition pickupAddress ownerNotes"
-      );
+      .populate({
+        path: "toy",
+        select: "name description images category ageGroup condition pickupAddress ownerNotes owner",
+        populate: {
+          path: "owner",
+          select: "profile"
+        }
+      });
 
     if (!booking) {
       return res.status(404).json({
@@ -156,11 +167,13 @@ const createBooking = async (req, res) => {
     }
 
     // Không thể mượn đồ chơi của chính mình
-    if (toy.owner.toString() === req.user._id.toString()) {
+    const ownerId = toy.owner._id || toy.owner;
+    console.log("Checking ownership - Toy owner:", ownerId.toString(), "Current user:", req.user._id.toString());
+    if (ownerId.toString() === req.user._id.toString()) {
+      console.log("User cannot borrow their own toy");
       return res.status(400).json({
         success: false,
         error: {
-          code: "CANNOT_BORROW_OWN_TOY",
           message: "Không thể mượn đồ chơi của chính mình",
         },
       });
@@ -223,7 +236,14 @@ const createBooking = async (req, res) => {
     await booking.populate([
       { path: "borrower", select: "profile" },
       { path: "lender", select: "profile" },
-      { path: "toy", select: "name images category ageGroup pickupAddress" },
+      { 
+        path: "toy", 
+        select: "name images category ageGroup pickupAddress owner",
+        populate: {
+          path: "owner",
+          select: "profile"
+        }
+      },
     ]);
 
     res.status(201).json({
@@ -328,7 +348,14 @@ const updateBookingStatus = async (req, res) => {
     await booking.populate([
       { path: "borrower", select: "profile" },
       { path: "lender", select: "profile" },
-      { path: "toy", select: "name images category" },
+      { 
+        path: "toy", 
+        select: "name images category owner pickupAddress",
+        populate: {
+          path: "owner",
+          select: "profile"
+        }
+      },
     ]);
 
     res.status(200).json({
@@ -413,7 +440,14 @@ const returnToy = async (req, res) => {
     ).populate([
       { path: "borrower", select: "profile" },
       { path: "lender", select: "profile" },
-      { path: "toy", select: "name images category" },
+      { 
+        path: "toy", 
+        select: "name images category owner pickupAddress",
+        populate: {
+          path: "owner",
+          select: "profile"
+        }
+      },
     ]);
 
     await Toy.findByIdAndUpdate(booking.toy, { status: "available" });
@@ -577,7 +611,14 @@ const rateBooking = async (req, res) => {
     ).populate([
       { path: "borrower", select: "profile" },
       { path: "lender", select: "profile" },
-      { path: "toy", select: "name images category" },
+      { 
+        path: "toy", 
+        select: "name images category owner pickupAddress",
+        populate: {
+          path: "owner",
+          select: "profile"
+        }
+      },
     ]);
 
     res.status(200).json({

@@ -19,6 +19,17 @@ const MyBookings = () => {
   // Ensure bookings is always an array
   const bookings = Array.isArray(bookingsData) ? bookingsData : 
                    (bookingsData?.bookings && Array.isArray(bookingsData.bookings)) ? bookingsData.bookings : []
+  
+  // Debug individual booking data
+  if (bookings.length > 0) {
+    console.log('=== BOOKING DEBUG ===')
+    console.log('Total bookings:', bookings.length)
+    console.log('First booking full data:', JSON.stringify(bookings[0], null, 2))
+    console.log('First booking toy data:', JSON.stringify(bookings[0].toy, null, 2))
+    console.log('First booking toy owner:', JSON.stringify(bookings[0].toy?.owner, null, 2))
+    console.log('Pickup address:', bookings[0].toy?.pickupAddress)
+    console.log('=== END DEBUG ===')
+  }
   const updateBookingStatus = useUpdateBookingStatus()
   const returnToy = useReturnToy()
   const checkExpiredBookings = useCheckExpiredBookings()
@@ -98,7 +109,6 @@ const MyBookings = () => {
     if (activeTab === 'all') return true
     return mapStatus(booking.status) === activeTab
   })
-
   const getStatusBadge = (status) => {
     const mappedStatus = mapStatus(status)
     const badges = {
@@ -287,11 +297,11 @@ const MyBookings = () => {
                       <div className="flex items-center space-x-4 text-sm text-gray-600 mb-3">
                         <div className="flex items-center space-x-2">
                           <div className="w-6 h-6 bg-gradient-to-r from-pink-500 to-purple-500 rounded-full flex items-center justify-center text-white text-xs font-semibold">
-                            {booking.toy.owner?.name?.charAt(0)?.toUpperCase() || 'U'}
+                            {booking.toy.owner?.profile?.firstName?.charAt(0)?.toUpperCase() || 'U'}
                           </div>
-                          <span>Chủ sở hữu: {booking.toy.owner?.name || 'Không xác định'}</span>
+                          <span>Chủ sở hữu: {booking.toy.owner?.profile?.firstName} {booking.toy.owner?.profile?.lastName || 'Không xác định'}</span>
                         </div>
-                        <span>📍 {booking.toy.location || 'Không xác định'}</span>
+                        <span>📍 {booking.toy.pickupAddress || 'Không xác định'}</span>
                       </div>
 
                       {/* Rating for completed bookings */}
