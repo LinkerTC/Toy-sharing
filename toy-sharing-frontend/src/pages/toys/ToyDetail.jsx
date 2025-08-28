@@ -2,6 +2,7 @@
 import { useEffect, useState, useMemo } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import BookingForm from '@/components/features/bookings/BookingForm'
+import CommentSection from '@/components/features/comments/CommentSection'
 
 const ToyDetail = () => {
   const { id } = useParams()
@@ -265,6 +266,11 @@ const ToyDetail = () => {
             {/* More from owner (placeholder) */}
             {/* Có thể bổ sung danh sách các đồ chơi khác của chủ sở hữu */}
           </div>
+        </div>
+
+        {/* Comments Section */}
+        <div className="mt-8">
+          <CommentSection toyId={id} />
         </div>
 
         {/* Booking Modal */}

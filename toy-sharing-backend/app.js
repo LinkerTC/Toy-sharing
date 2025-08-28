@@ -17,6 +17,7 @@ const bookingRoutes = require("./routes/bookings");
 const categoryRoutes = require("./routes/categories");
 const favoriteRoutes = require("./routes/favorite");
 const chatRoutes = require("./routes/chat");
+const commentRoutes = require("./routes/comments");
 
 const app = express();
 
@@ -128,6 +129,7 @@ app.use("/api/bookings", bookingRoutes);
 app.use("/api/categories", categoryRoutes);
 app.use("/api/favorites", favoriteRoutes);
 app.use("/api/chat", chatRoutes);
+app.use("/api/comments", commentRoutes);
 
 // 404 handler for API routes
 app.use("/api/*", (req, res) => {
