@@ -38,7 +38,14 @@ const getBookings = async (req, res) => {
       .skip(skip)
       .populate("borrower", "profile")
       .populate("lender", "profile")
-      .populate("toy", "name images category ageGroup pickupAddress");
+      .populate({
+        path: "toy",
+        select: "name images category ageGroup pickupAddress owner",
+        populate: {
+          path: "owner",
+          select: "profile"
+        }
+      });
 
     const total = await Booking.countDocuments(query);
     const totalPages = Math.ceil(total / limit);
@@ -77,10 +84,14 @@ const getBooking = async (req, res) => {
     const booking = await Booking.findById(req.params.id)
       .populate("borrower", "profile stats")
       .populate("lender", "profile stats")
-      .populate(
-        "toy",
-        "name description images category ageGroup condition pickupAddress ownerNotes"
-      );
+      .populate({
+        path: "toy",
+        select: "name description images category ageGroup condition pickupAddress ownerNotes owner",
+        populate: {
+          path: "owner",
+          select: "profile"
+        }
+      });
 
     if (!booking) {
       return res.status(404).json({
@@ -156,11 +167,13 @@ const createBooking = async (req, res) => {
     }
 
     // Không thể mượn đồ chơi của chính mình
-    if (toy.owner.toString() === req.user._id.toString()) {
+    const ownerId = toy.owner._id || toy.owner;
+    console.log("Checking ownership - Toy owner:", ownerId.toString(), "Current user:", req.user._id.toString());
+    if (ownerId.toString() === req.user._id.toString()) {
+      console.log("User cannot borrow their own toy");
       return res.status(400).json({
         success: false,
         error: {
-          code: "CANNOT_BORROW_OWN_TOY",
           message: "Không thể mượn đồ chơi của chính mình",
         },
       });
@@ -223,7 +236,14 @@ const createBooking = async (req, res) => {
     await booking.populate([
       { path: "borrower", select: "profile" },
       { path: "lender", select: "profile" },
-      { path: "toy", select: "name images category ageGroup pickupAddress" },
+      { 
+        path: "toy", 
+        select: "name images category ageGroup pickupAddress owner",
+        populate: {
+          path: "owner",
+          select: "profile"
+        }
+      },
     ]);
 
     res.status(201).json({
@@ -275,20 +295,19 @@ const updateBookingStatus = async (req, res) => {
       });
     }
 
-    // Chỉ lender mới có quyền cập nhật status
-    if (booking.lender.toString() !== req.user._id.toString()) {
-      return res.status(403).json({
-        success: false,
-        error: {
-          code: "FORBIDDEN",
-          message: "Chỉ chủ đồ chơi mới có thể cập nhật trạng thái",
-        },
-      });
-    }
+    // // Chỉ lender mới có quyền cập nhật status
+    // if (booking.borrower.toString() !== req.user._id.toString()) {
+    //   return res.status(403).json({
+    //     success: false,
+    //     error: {
+    //       code: "FORBIDDEN",
+    //       message: "Chỉ chủ đồ chơi mới có thể cập nhật trạng thái",
+    //     },
+    //   });
+    // }
 
     // Validate status transitions
     const validTransitions = {
-      requested: ["confirmed", "cancelled"],
       confirmed: ["completed", "cancelled"],
       completed: [], // Cannot change from completed
       cancelled: [], // Cannot change from cancelled
@@ -329,7 +348,14 @@ const updateBookingStatus = async (req, res) => {
     await booking.populate([
       { path: "borrower", select: "profile" },
       { path: "lender", select: "profile" },
-      { path: "toy", select: "name images category" },
+      { 
+        path: "toy", 
+        select: "name images category owner pickupAddress",
+        populate: {
+          path: "owner",
+          select: "profile"
+        }
+      },
     ]);
 
     res.status(200).json({
@@ -362,9 +388,262 @@ const updateBookingStatus = async (req, res) => {
   }
 };
 
+// @desc    Return toy (complete booking)
+// @route   PUT /api/bookings/:id/return
+// @access  Private (Borrower only)
+const returnToy = async (req, res) => {
+  try {
+    const booking = await Booking.findById(req.params.id);
+
+    if (!booking) {
+      return res.status(404).json({
+        success: false,
+        error: {
+          code: "BOOKING_NOT_FOUND",
+          message: "Không tìm thấy booking",
+        },
+      });
+    }
+    console.log("Booking found:", booking);
+    console.log("User ID:", req.user._id.toString());
+    console.log("Booking borrower ID:", booking.borrower.toString());
+    // Chỉ borrower mới có thể trả đồ chơi
+    if (booking.borrower._id.toString() !== req.user._id.toString()) {
+      return res.status(403).json({
+        success: false,
+        error: {
+          code: "FORBIDDEN",
+          message: "Chỉ người mượn mới có thể trả đồ chơi",
+        },
+      });
+    }
+
+    // Chỉ có thể trả đồ chơi đang được mượn
+    if (booking.status !== "confirmed") {
+      return res.status(400).json({
+        success: false,
+        error: {
+          code: "INVALID_STATUS",
+          message: "Chỉ có thể trả đồ chơi đang được mượn",
+        },
+      });
+    }
+
+    // Cập nhật booking status và toy status
+    const updatedBooking = await Booking.findByIdAndUpdate(
+      req.params.id, 
+      {
+        status: "completed",
+        returnedAt: new Date()
+      },
+      { new: true }
+    ).populate([
+      { path: "borrower", select: "profile" },
+      { path: "lender", select: "profile" },
+      { 
+        path: "toy", 
+        select: "name images category owner pickupAddress",
+        populate: {
+          path: "owner",
+          select: "profile"
+        }
+      },
+    ]);
+
+    await Toy.findByIdAndUpdate(booking.toy, { status: "available" });
+
+    // Cập nhật stats
+    await User.findByIdAndUpdate(booking.borrower, {
+      $inc: { "stats.toysBorrowed": 1 },
+    });
+
+    res.status(200).json({
+      success: true,
+      data: { booking: updatedBooking },
+      message: "Trả đồ chơi thành công",
+    });
+  } catch (error) {
+    console.error("Return toy error:", error);
+    res.status(500).json({
+      success: false,
+      error: {
+        code: "SERVER_ERROR",
+        message: "Lỗi server",
+      },
+    });
+  }
+};
+
+// @desc    Check and auto-return expired bookings
+// @route   POST /api/bookings/check-expired
+// @access  Private
+const checkExpiredBookings = async (req, res) => {
+  try {
+    const now = new Date();
+    
+    // Find all confirmed bookings that have passed their end date
+    const expiredBookings = await Booking.find({
+      status: "confirmed",
+      endDate: { $lt: now }
+    }).populate("toy", "name");
+
+    let autoReturnedCount = 0;
+    const autoReturnedBookings = [];
+
+    // Auto-return each expired booking
+    for (const booking of expiredBookings) {
+      await Booking.findByIdAndUpdate(booking._id, {
+        status: "completed",
+        returnedAt: new Date(),
+        autoReturned: true
+      });
+
+      // Update toy status back to available
+      await Toy.findByIdAndUpdate(booking.toy._id, { status: "available" });
+
+      // Update borrower stats
+      await User.findByIdAndUpdate(booking.borrower, {
+        $inc: { "stats.toysBorrowed": 1 },
+      });
+
+      autoReturnedCount++;
+      autoReturnedBookings.push({
+        id: booking._id,
+        toyName: booking.toy.name,
+        endDate: booking.endDate
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      data: {
+        autoReturnedCount,
+        autoReturnedBookings
+      },
+      message: `Đã tự động trả ${autoReturnedCount} đồ chơi hết hạn`,
+    });
+  } catch (error) {
+    console.error("Check expired bookings error:", error);
+    res.status(500).json({
+      success: false,
+      error: {
+        code: "SERVER_ERROR",
+        message: "Lỗi server",
+      },
+    });
+  }
+};
+
+// @desc    Rate a completed booking
+// @route   PUT /api/bookings/:id/rate
+// @access  Private (Borrower only)
+const rateBooking = async (req, res) => {
+  try {
+    const { score, comment } = req.body;
+
+    // Validate rating score
+    if (!score || score < 1 || score > 5) {
+      return res.status(400).json({
+        success: false,
+        error: {
+          code: "INVALID_RATING",
+          message: "Điểm đánh giá phải từ 1 đến 5",
+        },
+      });
+    }
+
+    const booking = await Booking.findById(req.params.id);
+
+    if (!booking) {
+      return res.status(404).json({
+        success: false,
+        error: {
+          code: "BOOKING_NOT_FOUND",
+          message: "Không tìm thấy booking",
+        },
+      });
+    }
+
+    // Chỉ borrower mới có thể đánh giá
+    if (booking.borrower._id.toString() !== req.user._id.toString()) {
+      return res.status(403).json({
+        success: false,
+        error: {
+          code: "FORBIDDEN",
+          message: "Chỉ người mượn mới có thể đánh giá",
+        },
+      });
+    }
+
+    // Chỉ có thể đánh giá booking đã hoàn thành
+    if (booking.status !== "completed") {
+      return res.status(400).json({
+        success: false,
+        error: {
+          code: "INVALID_STATUS",
+          message: "Chỉ có thể đánh giá booking đã hoàn thành",
+        },
+      });
+    }
+
+    // Kiểm tra đã đánh giá chưa
+    if (booking.rating && booking.rating.score) {
+      return res.status(400).json({
+        success: false,
+        error: {
+          code: "ALREADY_RATED",
+          message: "Booking này đã được đánh giá",
+        },
+      });
+    }
+
+    // Cập nhật rating
+    const updatedBooking = await Booking.findByIdAndUpdate(
+      req.params.id,
+      {
+        rating: {
+          score,
+          comment: comment || "",
+          ratedAt: new Date(),
+        },
+      },
+      { new: true }
+    ).populate([
+      { path: "borrower", select: "profile" },
+      { path: "lender", select: "profile" },
+      { 
+        path: "toy", 
+        select: "name images category owner pickupAddress",
+        populate: {
+          path: "owner",
+          select: "profile"
+        }
+      },
+    ]);
+
+    res.status(200).json({
+      success: true,
+      data: { booking: updatedBooking },
+      message: "Đánh giá thành công",
+    });
+  } catch (error) {
+    console.error("Rate booking error:", error);
+    res.status(500).json({
+      success: false,
+      error: {
+        code: "SERVER_ERROR",
+        message: "Lỗi server",
+      },
+    });
+  }
+};
+
 module.exports = {
   getBookings,
   getBooking,
   createBooking,
   updateBookingStatus,
+  returnToy,
+  checkExpiredBookings,
+  rateBooking,
 };

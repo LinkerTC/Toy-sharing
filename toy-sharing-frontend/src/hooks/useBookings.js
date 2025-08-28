@@ -21,10 +21,27 @@ const bookingsService = {
     return response.data.data.booking
   },
 
-  updateBookingStatus: async ({ id, status, lenderResponse }) => {
+  updateBookingStatus: async ({ id, status}) => {
     const response = await api.put(`/bookings/${id}/status`, {
-      status,
-      lenderResponse
+      status
+    })
+    return response.data.data.booking
+  },
+
+  returnToy: async (id) => {
+    const response = await api.put(`/bookings/${id}/return`)
+    return response.data.data.booking
+  },
+
+  checkExpiredBookings: async () => {
+    const response = await api.post('/bookings/check-expired')
+    return response.data.data
+  },
+
+  rateBooking: async ({ id, score, comment }) => {
+    const response = await api.put(`/bookings/${id}/rate`, {
+      score,
+      comment
     })
     return response.data.data.booking
   }
@@ -120,6 +137,113 @@ export const useUpdateBookingStatus = (options = {}) => {
       },
       onError: (error) => {
         console.error('Update booking status error:', error)
+        options.onError?.(error)
+      }
+    }
+  )
+}
+
+// Hook để trả đồ chơi
+export const useReturnToy = (options = {}) => {
+  const queryClient = useQueryClient()
+
+  return useMutation(
+    (bookingId) => bookingsService.returnToy(bookingId),
+    {
+      onSuccess: (returnedBooking) => {
+        // Update cache
+        queryClient.invalidateQueries(BOOKINGS_QUERY_KEYS.lists())
+        queryClient.setQueryData(
+          BOOKINGS_QUERY_KEYS.detail(returnedBooking._id),
+          returnedBooking
+        )
+
+        toast.success('Trả đồ chơi thành công! 🎉', {
+          icon: '✅',
+          duration: 4000
+        })
+
+        options.onSuccess?.(returnedBooking)
+      },
+      onError: (error) => {
+        console.error('Return toy error:', error)
+        const errorMessage = error.response?.data?.error?.message || 'Không thể trả đồ chơi. Vui lòng thử lại!'
+        toast.error(errorMessage, {
+          icon: '❌',
+          duration: 4000
+        })
+        options.onError?.(error)
+      }
+    }
+  )
+}
+
+// Hook để kiểm tra booking hết hạn
+export const useCheckExpiredBookings = (options = {}) => {
+  const queryClient = useQueryClient()
+
+  return useMutation(
+    () => bookingsService.checkExpiredBookings(),
+    {
+      onSuccess: (data) => {
+        // Update cache
+        queryClient.invalidateQueries(BOOKINGS_QUERY_KEYS.lists())
+
+        if (data.autoReturnedCount > 0) {
+          toast.success(`Đã tự động trả ${data.autoReturnedCount} đồ chơi hết hạn! 🔄`, {
+            icon: '⏰',
+            duration: 5000
+          })
+        } else {
+          toast.success('Không có đồ chơi nào hết hạn! ✅', {
+            icon: '👍',
+            duration: 3000
+          })
+        }
+
+        options.onSuccess?.(data)
+      },
+      onError: (error) => {
+        console.error('Check expired bookings error:', error)
+        toast.error('Không thể kiểm tra đồ chơi hết hạn. Vui lòng thử lại!', {
+          icon: '❌',
+          duration: 4000
+        })
+        options.onError?.(error)
+      }
+    }
+  )
+}
+
+// Hook để đánh giá booking
+export const useRateBooking = (options = {}) => {
+  const queryClient = useQueryClient()
+
+  return useMutation(
+    (ratingData) => bookingsService.rateBooking(ratingData),
+    {
+      onSuccess: (ratedBooking) => {
+        // Update cache
+        queryClient.invalidateQueries(BOOKINGS_QUERY_KEYS.lists())
+        queryClient.setQueryData(
+          BOOKINGS_QUERY_KEYS.detail(ratedBooking._id),
+          ratedBooking
+        )
+
+        toast.success('Đánh giá thành công! 🌟', {
+          icon: '⭐',
+          duration: 4000
+        })
+
+        options.onSuccess?.(ratedBooking)
+      },
+      onError: (error) => {
+        console.error('Rate booking error:', error)
+        const errorMessage = error.response?.data?.error?.message || 'Không thể đánh giá. Vui lòng thử lại!'
+        toast.error(errorMessage, {
+          icon: '❌',
+          duration: 4000
+        })
         options.onError?.(error)
       }
     }

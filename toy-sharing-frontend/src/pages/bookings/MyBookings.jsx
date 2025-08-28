@@ -1,10 +1,12 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
-import { useBookings, useUpdateBookingStatus } from '@/hooks/useBookings'
+import { useBookings, useUpdateBookingStatus, useReturnToy, useCheckExpiredBookings } from '@/hooks/useBookings'
+import RatingModal from '@/components/modals/RatingModal'
 import toast from 'react-hot-toast'
 
 const MyBookings = () => {
   const [activeTab, setActiveTab] = useState('all')
+  const [ratingModal, setRatingModal] = useState({ isOpen: false, booking: null })
   
   // Fetch real bookings data
   const { data: bookingsData, isLoading: loading, error } = useBookings()
@@ -17,7 +19,27 @@ const MyBookings = () => {
   // Ensure bookings is always an array
   const bookings = Array.isArray(bookingsData) ? bookingsData : 
                    (bookingsData?.bookings && Array.isArray(bookingsData.bookings)) ? bookingsData.bookings : []
+  
+  // Debug individual booking data
+  if (bookings.length > 0) {
+    console.log('=== BOOKING DEBUG ===')
+    console.log('Total bookings:', bookings.length)
+    console.log('First booking full data:', JSON.stringify(bookings[0], null, 2))
+    console.log('First booking toy data:', JSON.stringify(bookings[0].toy, null, 2))
+    console.log('First booking toy owner:', JSON.stringify(bookings[0].toy?.owner, null, 2))
+    console.log('Pickup address:', bookings[0].toy?.pickupAddress)
+    console.log('=== END DEBUG ===')
+  }
   const updateBookingStatus = useUpdateBookingStatus()
+  const returnToy = useReturnToy()
+  const checkExpiredBookings = useCheckExpiredBookings()
+
+  // Auto-check for expired bookings when component mounts
+  useEffect(() => {
+    if (bookings.length > 0) {
+      checkExpiredBookings.mutate()
+    }
+  }, [bookings.length])
 
   // Handle booking cancellation
   const handleCancelBooking = async (bookingId) => {
@@ -37,14 +59,33 @@ const MyBookings = () => {
   const handleReturnToy = async (bookingId) => {
     if (window.confirm('Bạn có chắc chắn muốn trả đồ chơi này?')) {
       try {
-        await updateBookingStatus.mutateAsync({
-          id: bookingId,
-          status: 'completed'
-        })
+        await returnToy.mutateAsync(bookingId)
       } catch (error) {
-        toast.error('Không thể trả đồ chơi. Vui lòng thử lại!')
+        // Error handling is done in the hook
       }
     }
+  }
+
+  // Check if a booking is overdue
+  const isBookingOverdue = (booking) => {
+    if (mapStatus(booking.status) !== 'active') return false
+    const now = new Date()
+    const endDate = new Date(booking.endDate)
+    return endDate < now
+  }
+
+  // Handle manual expired check
+  const handleCheckExpired = () => {
+    checkExpiredBookings.mutate()
+  }
+
+  // Handle rating modal
+  const handleOpenRating = (booking) => {
+    setRatingModal({ isOpen: true, booking })
+  }
+
+  const handleCloseRating = () => {
+    setRatingModal({ isOpen: false, booking: null })
   }
 
   // Map backend status to frontend display status
@@ -68,7 +109,6 @@ const MyBookings = () => {
     if (activeTab === 'all') return true
     return mapStatus(booking.status) === activeTab
   })
-
   const getStatusBadge = (status) => {
     const mappedStatus = mapStatus(status)
     const badges = {
@@ -127,12 +167,24 @@ const MyBookings = () => {
 
         {/* Header */}
         <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">
-            📅 Lịch sử mượn đồ chơi
-          </h1>
-          <p className="text-gray-600">
-            Theo dõi và quản lý các lần mượn đồ chơi của bạn
-          </p>
+          <div className="flex items-center justify-between mb-4">
+            <div></div>
+            <div>
+              <h1 className="text-3xl font-bold text-gray-900 mb-2">
+                📅 Lịch sử mượn đồ chơi
+              </h1>
+              <p className="text-gray-600">
+                Theo dõi và quản lý các lần mượn đồ chơi của bạn
+              </p>
+            </div>
+            <button
+              onClick={handleCheckExpired}
+              disabled={checkExpiredBookings.isLoading}
+              className="px-4 py-2 bg-orange-100 text-orange-700 rounded-xl font-medium hover:bg-orange-200 transition-colors disabled:opacity-50"
+            >
+              {checkExpiredBookings.isLoading ? '⏳ Đang kiểm tra...' : '⏰ Kiểm tra hết hạn'}
+            </button>
+          </div>
         </div>
 
         {/* Stats */}
@@ -221,8 +273,15 @@ const MyBookings = () => {
 
                       {/* Status & Dates */}
                       <div className="flex items-center justify-between mb-3">
-                        {getStatusBadge(booking.status)}
-                        <div className="text-sm text-gray-500">
+                        <div className="flex items-center gap-2">
+                          {getStatusBadge(booking.status)}
+                          {isBookingOverdue(booking) && (
+                            <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-600">
+                              ⚠️ Quá hạn
+                            </span>
+                          )}
+                        </div>
+                        <div className={`text-sm ${isBookingOverdue(booking) ? 'text-red-500 font-medium' : 'text-gray-500'}`}>
                           {new Date(booking.startDate).toLocaleDateString('vi-VN')} - {new Date(booking.endDate).toLocaleDateString('vi-VN')}
                         </div>
                       </div>
@@ -238,24 +297,34 @@ const MyBookings = () => {
                       <div className="flex items-center space-x-4 text-sm text-gray-600 mb-3">
                         <div className="flex items-center space-x-2">
                           <div className="w-6 h-6 bg-gradient-to-r from-pink-500 to-purple-500 rounded-full flex items-center justify-center text-white text-xs font-semibold">
-                            {booking.toy.owner?.name?.charAt(0)?.toUpperCase() || 'U'}
+                            {booking.toy.owner?.profile?.firstName?.charAt(0)?.toUpperCase() || 'U'}
                           </div>
-                          <span>Chủ sở hữu: {booking.toy.owner?.name || 'Không xác định'}</span>
+                          <span>Chủ sở hữu: {booking.toy.owner?.profile?.firstName} {booking.toy.owner?.profile?.lastName || 'Không xác định'}</span>
                         </div>
-                        <span>📍 {booking.toy.location || 'Không xác định'}</span>
+                        <span>📍 {booking.toy.pickupAddress || 'Không xác định'}</span>
                       </div>
 
                       {/* Rating for completed bookings */}
-                      {booking.status === 'completed' && booking.rating && (
+                      {mapStatus(booking.status) === 'completed' && booking.rating && booking.rating.score && (
                         <div className="flex items-center space-x-2 mb-2">
                           <span className="text-sm text-gray-600">Đánh giá của bạn:</span>
                           <div className="flex space-x-1">
                             {[1,2,3,4,5].map(star => (
-                              <span key={star} className={`text-lg ${star <= booking.rating ? 'text-yellow-400' : 'text-gray-300'}`}>
+                              <span key={star} className={`text-lg ${star <= booking.rating.score ? 'text-yellow-400' : 'text-gray-300'}`}>
                                 ⭐
                               </span>
                             ))}
                           </div>
+                          <span className="text-sm text-gray-600">({booking.rating.score}/5)</span>
+                        </div>
+                      )}
+                      
+                      {/* Rating comment */}
+                      {mapStatus(booking.status) === 'completed' && booking.rating && booking.rating.comment && (
+                        <div className="mb-2">
+                          <p className="text-sm text-gray-600 italic">
+                            "{booking.rating.comment}"
+                          </p>
                         </div>
                       )}
                     </div>
@@ -270,18 +339,21 @@ const MyBookings = () => {
                       </Link>
 
 
-                      {/* {mapStatus(booking.status) === 'active' && (
+                      {mapStatus(booking.status) === 'active' && (
                         <button 
                           onClick={() => handleReturnToy(booking._id || booking.id)}
-                          disabled={updateBookingStatus.isLoading}
+                          disabled={returnToy.isLoading}
                           className="px-4 py-2 bg-green-100 text-green-700 rounded-lg font-medium hover:bg-green-200 transition-colors disabled:opacity-50"
                         >
-                          ✅ Trả về
+                          {returnToy.isLoading ? '⏳ Đang xử lý...' : '✅ Trả về'}
                         </button>
-                      )} */}
+                      )}
 
-                      {mapStatus(booking.status) === 'completed' && !booking.rating && (
-                        <button className="px-4 py-2 bg-yellow-100 text-yellow-700 rounded-lg font-medium hover:bg-yellow-200 transition-colors">
+                      {mapStatus(booking.status) === 'completed' && (!booking.rating || !booking.rating.score) && (
+                        <button 
+                          onClick={() => handleOpenRating(booking)}
+                          className="px-4 py-2 bg-yellow-100 text-yellow-700 rounded-lg font-medium hover:bg-yellow-200 transition-colors"
+                        >
                           ⭐ Đánh giá
                         </button>
                       )}
@@ -313,6 +385,13 @@ const MyBookings = () => {
             </div>
           )}
         </div>
+
+        {/* Rating Modal */}
+        <RatingModal
+          isOpen={ratingModal.isOpen}
+          onClose={handleCloseRating}
+          booking={ratingModal.booking}
+        />
       </div>
     </div>
   )
