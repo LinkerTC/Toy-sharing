@@ -15,10 +15,10 @@ const About = lazy(() => import("./pages/About"));
 const HowItWorks = lazy(() => import("./pages/HowItWorks"));
 
 // Auth pages
-const Login = lazy(() => import('./pages/auth/Login'))
-const Register = lazy(() => import('./pages/auth/Register'))
-const VerifyPage = lazy(() => import('./pages/auth/VerifyPage'))
-const ForgotPassword = lazy(() => import('./pages/auth/ForgotPassword'))
+const Login = lazy(() => import("./pages/auth/Login"));
+const Register = lazy(() => import("./pages/auth/Register"));
+const VerifyPage = lazy(() => import("./pages/auth/VerifyPage"));
+const ForgotPassword = lazy(() => import("./pages/auth/ForgotPassword"));
 
 // Toy pages
 const ToyBrowse = lazy(() => import("./pages/toys/ToyBrowse"));
@@ -38,7 +38,7 @@ const EditProfile = lazy(() => import("./pages/profile/EditProfile"));
 const Settings = lazy(() => import("./pages/profile/Settings"));
 
 // Chat page
-const Chat = lazy(() => import("./pages/Chat"));
+const Chat = lazy(() => import("./pages/Chat.jsx"));
 
 // Legal pages
 const Privacy = lazy(() => import("./pages/legal/Privacy"));
@@ -82,6 +82,7 @@ function App() {
               <Route element={<ProtectedRoute />}>
                 {/* Toy Management */}
                 <Route path="my-toys" element={<MyToys />} />
+                <Route path="favorites" element={<Favorite />} />
                 <Route path="toys/create" element={<ToyCreate />} />
                 <Route path="toys/:id/edit" element={<ToyEdit />} />
 
@@ -93,52 +94,26 @@ function App() {
                 <Route path="profile" element={<Profile />} />
                 <Route path="profile/edit" element={<EditProfile />} />
                 <Route path="settings" element={<Settings />} />
+
+                {/* Chat */}
+                <Route path="chat" element={<Chat />} />
               </Route>
-
-              {/* Auth Routes (No Layout) */}
-              <Route path="/login" element={<Login />} />
-              <Route path="/register" element={<Register />} />
-
-              {/* Protected Routes */}
-              <Route path="/" element={<Layout />}>
-                <Route element={<ProtectedRoute />}>
-                  {/* Toy Management */}
-                  <Route path="my-toys" element={<MyToys />} />
-                  <Route path="favorites" element={<Favorite />} />
-                  <Route path="toys/create" element={<ToyCreate />} />
-                  <Route path="toys/:id/edit" element={<ToyEdit />} />
-
-                  {/* Bookings */}
-                  <Route path="bookings" element={<MyBookings />} />
-                  <Route path="bookings/:id" element={<BookingDetail />} />
-
-                  {/* Profile */}
-                  <Route path="profile" element={<Profile />} />
-                  <Route path="profile/edit" element={<EditProfile />} />
-                  <Route path="settings" element={<Settings />} />
-
-                  {/* Chat */}
-                  <Route path="chat" element={<Chat />} />
-                </Route>
-              </Route>
-
-              {/* Redirects */}
-              <Route path="/home" element={<Navigate to="/" replace />} />
-              <Route
-                path="/dashboard"
-                element={<Navigate to="/my-toys" replace />}
-              />
-
-              {/* 404 */}
-              <Route path="*" element={<NotFound />} />
             </Route>
-          </Routes>
 
+            {/* Redirects */}
+            <Route path="/home" element={<Navigate to="/" replace />} />
+            <Route
+              path="/dashboard"
+              element={<Navigate to="/my-toys" replace />}
+            />
+
+            {/* 404 */}
+            <Route path="*" element={<NotFound />} />
+          </Routes>
         </Suspense>
       </div>
     </ErrorBoundary>
   );
 }
-
 
 export default App;

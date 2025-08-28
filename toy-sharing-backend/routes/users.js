@@ -1,10 +1,19 @@
 const express = require("express");
-const { getProfile, updateProfile } = require("../controllers/userController");
+const {
+  getProfile,
+  updateProfile,
+  getAllUser,
+} = require("../controllers/userController");
 const { auth } = require("../middleware/auth");
 const router = express.Router();
 
 // Tất cả routes trong file này đều cần authentication
 router.use(auth);
+
+// @route   GET /api/users
+// @desc    Lấy tất cả users
+// @access  Private
+router.get("/", getAllUser);
 
 // @route   GET /api/users/profile
 // @desc    Lấy profile user

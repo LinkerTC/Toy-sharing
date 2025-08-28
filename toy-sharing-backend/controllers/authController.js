@@ -1,6 +1,9 @@
 const jwt = require("jsonwebtoken");
 const User = require("../models/User");
-const { sendVerifyEmail, sendForgotPasswordEmail } = require("../services/verifycationMail");
+const {
+  sendVerifyEmail,
+  sendForgotPasswordEmail,
+} = require("../services/verifycationMail");
 const { OAuth2Client } = require("google-auth-library");
 
 // Tạo JWT token
@@ -51,7 +54,8 @@ const register = async (req, res) => {
 
       res.status(201).json({
         success: true,
-        message: "Registration successful! Please check your email to verify your account.",
+        message:
+          "Registration successful! Please check your email to verify your account.",
         data: {
           user: {
             id: user._id,
@@ -68,7 +72,8 @@ const register = async (req, res) => {
       // Still return success but notify about email issue
       res.status(202).json({
         success: true,
-        message: "Registration successful, but failed to send verification email. Please try logging in later to resend verification.",
+        message:
+          "Registration successful, but failed to send verification email. Please try logging in later to resend verification.",
         data: {
           user: {
             id: user._id,
@@ -81,7 +86,6 @@ const register = async (req, res) => {
         },
       });
     }
-
   } catch (error) {
     console.error("Register error:", error);
 
@@ -113,15 +117,21 @@ const verifyUser = async (req, res) => {
     const user = await User.findOne({ email });
 
     if (!user) {
-      return res.status(404).json({ success: false, message: "User not found" });
+      return res
+        .status(404)
+        .json({ success: false, message: "User not found" });
     }
 
     if (user.isActive) {
-      return res.status(400).json({ success: false, message: "User already verified" });
+      return res
+        .status(400)
+        .json({ success: false, message: "User already verified" });
     }
 
     if (!user.otp || user.otp !== otp || user.otpExpires < Date.now()) {
-      return res.status(400).json({ success: false, message: "OTP không hợp lệ hoặc đã hết hạn" });
+      return res
+        .status(400)
+        .json({ success: false, message: "OTP không hợp lệ hoặc đã hết hạn" });
     }
 
     user.isActive = true;
@@ -147,15 +157,21 @@ const resendVerificationEmail = async (req, res) => {
     await user.save();
 
     if (!user) {
-      return res.status(404).json({ success: false, message: "User not found" });
+      return res
+        .status(404)
+        .json({ success: false, message: "User not found" });
     }
 
     if (user.isActive) {
-      return res.status(400).json({ success: false, message: "User already verified" });
+      return res
+        .status(400)
+        .json({ success: false, message: "User already verified" });
     }
 
     if (!user.otp || user.otpExpires < Date.now()) {
-      return res.status(400).json({ success: false, message: "OTP không hợp lệ hoặc đã hết hạn" });
+      return res
+        .status(400)
+        .json({ success: false, message: "OTP không hợp lệ hoặc đã hết hạn" });
     }
 
     user.otpExpires = Date.now() + 10 * 60 * 1000; // 10 minutes
@@ -163,10 +179,15 @@ const resendVerificationEmail = async (req, res) => {
 
     try {
       await sendVerifyEmail(email, otp);
-      res.status(200).json({ success: true, message: "Verification email resent successfully" });
+      res.status(200).json({
+        success: true,
+        message: "Verification email resent successfully",
+      });
     } catch (emailError) {
       console.error("Failed to send verification email:", emailError);
-      res.status(500).json({ success: false, message: "Failed to send verification email" });
+      res
+        .status(500)
+        .json({ success: false, message: "Failed to send verification email" });
     }
   } catch (error) {
     console.error("Resend verification email error:", error);
@@ -205,6 +226,10 @@ const login = async (req, res) => {
         },
       });
     }
+
+    // Cập nhật trạng thái online
+    user.isOnline = true;
+    await user.save();
 
     // Tạo token
     const token = generateToken(user._id);
@@ -330,7 +355,7 @@ const forgotPassword = async (req, res) => {
         },
       });
     }
-    
+
     // Generate 6-digit OTP
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
     user.otp = otp;
@@ -381,18 +406,20 @@ const verifyForgotPassword = async (req, res) => {
         },
       });
     }
-    
+
     if (!user.otp || user.otp !== otp || user.otpExpires < Date.now()) {
-      return res.status(400).json({ success: false, message: "OTP không hợp lệ hoặc đã hết hạn" });
+      return res
+        .status(400)
+        .json({ success: false, message: "OTP không hợp lệ hoặc đã hết hạn" });
     }
-    
+
     user.otp = undefined;
     user.otpExpires = undefined;
     await user.save();
-    
+
     user.password = password;
     await user.save();
-    
+
     res.status(200).json({ success: true, message: "Đổi mật khẩu thành công" });
   } catch (error) {
     console.error("Verify forgot password error:", error);
@@ -433,6 +460,10 @@ const googleLogin = async (req, res) => {
       await user.save();
     }
 
+    // Cập nhật trạng thái online
+    user.isOnline = true;
+    await user.save();
+
     // tạo JWT dựa trên user._id
     const appToken = generateToken(user._id);
 
@@ -454,9 +485,34 @@ const googleLogin = async (req, res) => {
   }
 };
 
+// @desc    Đăng xuất
+// @route   POST /api/auth/logout
+// @access  Private
+const logout = async (req, res) => {
+  try {
+    // Cập nhật trạng thái offline
+    await User.findByIdAndUpdate(req.user._id, { isOnline: false });
+
+    res.status(200).json({
+      success: true,
+      message: "Đăng xuất thành công",
+    });
+  } catch (error) {
+    console.error("Logout error:", error);
+    res.status(500).json({
+      success: false,
+      error: {
+        code: "SERVER_ERROR",
+        message: "Lỗi server",
+      },
+    });
+  }
+};
+
 module.exports = {
   register,
   login,
+  logout,
   getMe,
   verifyUser,
   resendVerificationEmail,

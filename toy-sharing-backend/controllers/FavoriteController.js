@@ -1,6 +1,5 @@
 const Favorite = require("../models/Favorite");
 const Toy = require("../models/Toy");
-const { sendToOwner } = require("../utils/socket");
 
 // Sửa function addFavorite
 exports.addFavorite = async (req, res) => {
@@ -17,14 +16,7 @@ exports.addFavorite = async (req, res) => {
       { upsert: true, new: true, setDefaultsOnInsert: true }
     );
 
-    // Thông báo cho chủ sở hữu đồ chơi
-    const io = req.app.get("io");
-    sendToOwner(io, toy.owner._id, {
-      type: "FAVORITE_ADDED",
-      message: `${req.user.profile.firstName} đã thêm ${toy.name} vào danh sách yêu thích`,
-      toyId: toyId,
-      userId: userId,
-    });
+    // Thông báo cho chủ sở hữu đồ chơi (đã loại bỏ socket)
 
     res.status(201).json(favorite);
   } catch (err) {

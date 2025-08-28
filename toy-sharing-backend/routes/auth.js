@@ -1,5 +1,16 @@
 const express = require("express");
-const { register, login, getMe, verifyUser, resendVerificationEmail, changePassword, forgotPassword, verifyForgotPassword, googleLogin } = require("../controllers/authController");
+const {
+  register,
+  login,
+  logout,
+  getMe,
+  verifyUser,
+  resendVerificationEmail,
+  changePassword,
+  forgotPassword,
+  verifyForgotPassword,
+  googleLogin,
+} = require("../controllers/authController");
 const {
   validateRegistration,
   validateLogin,
@@ -28,6 +39,11 @@ router.post("/verify", verifyUser);
 // @access  Public
 router.post("/login", validateLogin, login);
 
+// @route   POST /api/auth/logout
+// @desc    Đăng xuất
+// @access  Private
+router.post("/logout", auth, logout);
+
 // @route   GET /api/auth/me
 // @desc    Lấy thông tin user hiện tại
 // @access  Private
@@ -52,7 +68,5 @@ router.post("/forgot-password", forgotPassword);
 // @desc    Verify forgot password
 // @access  Public
 router.post("/verify-forgot-password", verifyForgotPassword);
-
-
 
 module.exports = router;

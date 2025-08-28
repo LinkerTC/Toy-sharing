@@ -85,8 +85,4 @@ ReactDOM.createRoot(document.getElementById("root")).render(
   </React.StrictMode>,
 )
 
-// Performance monitoring
-if (isDevelopment) {
-  console.log("🎨 Toy Sharing App - Development Mode");
-  console.log("🚀 Performance monitoring enabled");
-}
+

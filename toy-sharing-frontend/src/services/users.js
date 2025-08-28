@@ -3,25 +3,44 @@ import api from "./api";
 // Lấy danh sách tất cả người dùng
 export const getAllUsers = async (params = {}) => {
   try {
-    const { page = 1, limit = 20, search = "", exclude = [] } = params;
+    const { page = 1, limit = 10, search = "" } = params;
 
     const queryParams = {
       page,
       limit,
       search,
-      exclude: exclude.join(","), // Convert array to comma-separated string
     };
 
     const response = await api.get("/users", {
       params: queryParams,
     });
 
+    // Xử lý response format mới
+    if (response.data.success && response.data.data) {
+      const { users, pagination } = response.data.data;
+
+      return {
+        users: users || [],
+        total: pagination?.totalUsers || 0,
+        currentPage: pagination?.currentPage || page,
+        totalPages: pagination?.totalPages || 1,
+        hasMore: pagination?.hasNextPage || false,
+        hasPrev: pagination?.hasPrevPage || false,
+        limit: pagination?.limit || limit,
+        pagination: pagination,
+      };
+    }
+
+    // Fallback cho response cũ
     return {
       users: response.data.data || response.data.users || [],
       total: response.data.total || 0,
       currentPage: response.data.currentPage || page,
       totalPages: response.data.totalPages || 1,
       hasMore: response.data.hasMore || false,
+      hasPrev: false,
+      limit: limit,
+      pagination: null,
     };
   } catch (error) {
     console.error("Error fetching users:", error);
@@ -32,6 +51,9 @@ export const getAllUsers = async (params = {}) => {
       currentPage: 1,
       totalPages: 1,
       hasMore: false,
+      hasPrev: false,
+      limit: params.limit || 10,
+      pagination: null,
     };
   }
 };

@@ -1,18 +1,42 @@
-import { useState } from "react";
-import { Search, MessageCircle, Users, Plus } from "lucide-react";
+import { useState, useEffect } from "react";
+import { Search, MessageCircle, Users, Plus, Loader2 } from "lucide-react";
 import { useUserSearch } from "../../hooks/useChat";
 import { useAuth } from "../../context/AuthContext";
 
-const UserList = ({ onSelectUser, selectedUserId }) => {
+const UserList = ({
+  onSelectUser,
+  selectedUserId,
+  onlineUsers = new Set(),
+}) => {
   const { user: currentUser } = useAuth();
-  const { users, searchQuery, setSearchQuery, loading } = useUserSearch();
+  const {
+    users,
+    searchQuery,
+    setSearchQuery,
+    loading,
+    pagination,
+    loadMoreUsers,
+    hasMore,
+  } = useUserSearch();
   const [showAllUsers, setShowAllUsers] = useState(false);
 
   const handleUserSelect = (user) => {
     onSelectUser(user);
   };
 
+  const handleScroll = (e) => {
+    const { scrollTop, scrollHeight, clientHeight } = e.target;
+    if (scrollTop + clientHeight >= scrollHeight - 100 && hasMore && !loading) {
+      loadMoreUsers();
+    }
+  };
+
   const filteredUsers = users.filter((user) => user.id !== currentUser?.id);
+
+  // Kiểm tra user có online không
+  const isUserOnline = (userId) => {
+    return onlineUsers.has(userId);
+  };
 
   return (
     <div className="h-full bg-white rounded-lg border border-gray-200">
@@ -21,6 +45,17 @@ const UserList = ({ onSelectUser, selectedUserId }) => {
           <div className="flex items-center space-x-2">
             <Users className="w-5 h-5 text-gray-500" />
             <h2 className="font-semibold text-gray-900">Người dùng</h2>
+            {pagination && (
+              <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded">
+                {pagination.totalUsers} người dùng
+              </span>
+            )}
+            {/* Online Users Count */}
+            {onlineUsers.size > 0 && (
+              <span className="text-xs text-green-600 bg-green-50 px-2 py-1 rounded border border-green-200">
+                {onlineUsers.size} online
+              </span>
+            )}
           </div>
           <button
             onClick={() => setShowAllUsers(!showAllUsers)}
@@ -36,7 +71,7 @@ const UserList = ({ onSelectUser, selectedUserId }) => {
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
             <input
               type="text"
-              placeholder="Tìm kiếm người dùng..."
+              placeholder="Tìm kiếm người dùng theo email..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
@@ -45,55 +80,102 @@ const UserList = ({ onSelectUser, selectedUserId }) => {
         )}
       </div>
 
-      <div className="flex-1 overflow-y-auto">
-        {loading ? (
+      <div className="flex-1 overflow-y-auto" onScroll={handleScroll}>
+        {loading && users.length === 0 ? (
           <div className="flex items-center justify-center p-8">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600"></div>
+            <Loader2 className="w-8 h-8 text-primary-600 animate-spin" />
           </div>
         ) : filteredUsers.length > 0 ? (
           <div className="divide-y divide-gray-100">
-            {filteredUsers.map((user) => (
-              <div
-                key={user.id}
-                onClick={() => handleUserSelect(user)}
-                className={`p-4 cursor-pointer hover:bg-gray-50 transition-colors ${
-                  selectedUserId === user.id
-                    ? "bg-primary-50 border-r-2 border-primary-500"
-                    : ""
-                }`}
-              >
-                <div className="flex items-center space-x-3">
-                  <div className="w-10 h-10 bg-gradient-to-br from-primary-400 to-accent-400 rounded-full flex items-center justify-center text-white font-semibold">
-                    {(user.name || user.username || "?")
-                      .charAt(0)
-                      .toUpperCase()}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center justify-between">
-                      <h3 className="text-sm font-medium text-gray-900 truncate">
-                        {user.name || user.username}
-                      </h3>
-                      {user.isOnline && (
-                        <div className="flex-shrink-0">
-                          <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+            {filteredUsers.map((user) => {
+              const isOnline = isUserOnline(user.id);
+              return (
+                <div
+                  key={user.id}
+                  onClick={() => handleUserSelect(user)}
+                  className={`p-4 cursor-pointer hover:bg-gray-50 transition-colors ${
+                    selectedUserId === user.id
+                      ? "bg-primary-50 border-r-2 border-primary-500"
+                      : ""
+                  }`}
+                >
+                  <div className="flex items-center space-x-3">
+                    <div className="relative">
+                      {user.avatar ? (
+                        <img
+                          src={user.avatar}
+                          alt={user.name}
+                          className="w-10 h-10 rounded-full object-cover"
+                        />
+                      ) : (
+                        <div className="w-10 h-10 bg-gradient-to-br from-primary-400 to-accent-400 rounded-full flex items-center justify-center text-white font-semibold">
+                          {(user.name || user.username || "?")
+                            .charAt(0)
+                            .toUpperCase()}
                         </div>
                       )}
+                      {/* Online Status Indicator */}
+                      {isOnline && (
+                        <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-green-500 border-2 border-white rounded-full"></div>
+                      )}
                     </div>
-                    {user.email && (
-                      <p className="text-sm text-gray-500 truncate">
-                        {user.email}
-                      </p>
-                    )}
-                    <div className="flex items-center space-x-2 mt-1">
-                      <span className="text-xs text-gray-400">
-                        {user.isOnline ? "Đang hoạt động" : "Không hoạt động"}
-                      </span>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center justify-between">
+                        <h3 className="text-sm font-medium text-gray-900 truncate">
+                          {user.name || user.username}
+                        </h3>
+                        <div className="flex items-center space-x-2">
+                          {isOnline && (
+                            <span className="text-xs text-green-600 font-medium">
+                              Online
+                            </span>
+                          )}
+                          <MessageCircle className="w-4 h-4 text-gray-400" />
+                        </div>
+                      </div>
+                      {user.email && (
+                        <p className="text-sm text-gray-500 truncate">
+                          {user.email}
+                        </p>
+                      )}
+                      {user.phone && (
+                        <p className="text-xs text-gray-400 truncate">
+                          📞 {user.phone}
+                        </p>
+                      )}
+                      <div className="flex items-center space-x-2 mt-1">
+                        <span
+                          className={`text-xs ${isOnline ? "text-green-600" : "text-gray-400"}`}
+                        >
+                          {isOnline
+                            ? "🟢 Đang hoạt động"
+                            : "⚫ Không hoạt động"}
+                        </span>
+                      </div>
                     </div>
                   </div>
-                  <MessageCircle className="w-4 h-4 text-gray-400" />
                 </div>
+              );
+            })}
+
+            {/* Loading indicator for pagination */}
+            {loading && users.length > 0 && (
+              <div className="flex items-center justify-center p-4">
+                <Loader2 className="w-5 h-5 text-primary-600 animate-spin" />
+                <span className="ml-2 text-sm text-gray-500">
+                  Đang tải thêm...
+                </span>
               </div>
-            ))}
+            )}
+
+            {/* End of list indicator */}
+            {!hasMore && users.length > 0 && (
+              <div className="p-4 text-center">
+                <span className="text-xs text-gray-400">
+                  Đã hiển thị tất cả người dùng
+                </span>
+              </div>
+            )}
           </div>
         ) : (
           <div className="p-8 text-center">
