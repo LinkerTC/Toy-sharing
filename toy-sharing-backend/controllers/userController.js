@@ -33,7 +33,7 @@ const getProfile = async (req, res) => {
   }
 };
 
-// @desc    Cập nhật profile user
+// @desc    Cập nhật profile user isUpdated
 // @route   PUT /api/users/profile
 // @access  Private
 const updateProfile = async (req, res) => {
@@ -50,6 +50,7 @@ const updateProfile = async (req, res) => {
           updateData[`profile.${key}`] = profile[key];
         }
       });
+      updateData["profile.isUpdated"] = true;
     }
 
     if (Object.keys(updateData).length === 0) {

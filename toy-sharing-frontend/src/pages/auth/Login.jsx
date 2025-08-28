@@ -115,7 +115,11 @@ const Login = () => {
       });
       localStorage.setItem("token", res.data.token);
       // If success, redirect to home
-      navigate("/");
+      if (res.data.user.profile.isUpdated) {
+        window.location.href = "/";
+      } else {
+        window.location.href = "/profile/edit";
+      }
     } catch (err) {
       // You might want to show error here
       // Optionally: setErrors({ google: "Đăng nhập Google thất bại" });

@@ -36,7 +36,10 @@ const register = async (req, res) => {
     const user = await User.create({
       email,
       password,
-      profile,
+      profile: {
+        isUpdated: true,
+        ...profile,
+      },
     });
 
     // Generate 6-digit OTP

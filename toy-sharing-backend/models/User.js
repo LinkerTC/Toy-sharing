@@ -19,6 +19,10 @@ const userSchema = new mongoose.Schema(
       minlength: [6, "Mật khẩu phải có ít nhất 6 ký tự"],
     },
     profile: {
+      isUpdated: {
+        type: Boolean,
+        default: false,
+      },
       firstName: {
         type: String,
         // required: [true, "Tên là bắt buộc"],
